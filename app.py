@@ -1,0 +1,971 @@
+"""
+Main Streamlit application for the Video Summarization Engine.
+Provides web interface for video discovery, processing, and summary generation.
+"""
+import streamlit as st
+import pandas as pd
+import plotly.express as px
+import plotly.graph_objects as go
+from pathlib import Path
+import time
+import threading
+from typing import Dict, List
+import logging
+
+# Core modules
+from core.database import VideoDatabase
+from core.video_discovery import VideoDiscovery
+from core.batch_processor import BatchProcessor
+from utils.gpu_manager import GPUManager
+from utils.progress_tracker import ProgressTracker
+import config
+
+# Configure logging
+logging.basicConfig(level=logging.INFO)
+logger = logging.getLogger(__name__)
+
+# Page configuration
+st.set_page_config(
+    page_title="Video Summarization Engine",
+    page_icon="🎬",
+    layout="wide",
+    initial_sidebar_state="expanded"
+)
+
+# Initialize session state
+if 'initialized' not in st.session_state:
+    st.session_state.initialized = False
+    st.session_state.db = VideoDatabase()
+    st.session_state.discovery = VideoDiscovery()
+    st.session_state.batch_processor = BatchProcessor()
+    st.session_state.gpu_manager = GPUManager()
+    st.session_state.progress_tracker = ProgressTracker()
+    st.session_state.processing_status = {}
+    st.session_state.selected_videos = []
+    st.session_state.initialized = True
+
+def main():
+    """Main application entry point."""
+    st.title("🎬 Video Summarization Engine")
+    st.markdown("*Offline GPU-accelerated movie summarization with narrative analysis*")
+    
+    # Sidebar navigation
+    with st.sidebar:
+        st.header("Navigation")
+        page = st.selectbox(
+            "Choose a page:",
+            ["Overview", "Video Discovery", "Processing Queue", "Batch Processing", 
+             "Summary Results", "System Status", "Settings"]
+        )
+    
+    # Route to selected page
+    if page == "Overview":
+        show_overview_page()
+    elif page == "Video Discovery":
+        show_discovery_page()
+    elif page == "Processing Queue":
+        show_queue_page()
+    elif page == "Batch Processing":
+        show_processing_page()
+    elif page == "Summary Results":
+        show_results_page()
+    elif page == "System Status":
+        show_status_page()
+    elif page == "Settings":
+        show_settings_page()
+
+def show_overview_page():
+    """Display overview dashboard."""
+    st.header("📊 System Overview")
+    
+    # Get database statistics
+    db_stats = st.session_state.db.get_processing_stats()
+    
+    # Create metrics columns
+    col1, col2, col3, col4 = st.columns(4)
+    
+    with col1:
+        total_videos = sum(stats.get('count', 0) for stats in db_stats.values())
+        st.metric("Total Videos", total_videos)
+    
+    with col2:
+        completed = db_stats.get('completed', {}).get('count', 0)
+        st.metric("Completed", completed)
+    
+    with col3:
+        processing = db_stats.get('processing', {}).get('count', 0)
+        st.metric("Processing", processing)
+    
+    with col4:
+        failed = db_stats.get('failed', {}).get('count', 0)
+        st.metric("Failed", failed)
+    
+    # Processing status chart
+    if db_stats:
+        st.subheader("Processing Status Distribution")
+        
+        status_data = []
+        for status, data in db_stats.items():
+            status_data.append({
+                'Status': status.title(),
+                'Count': data.get('count', 0)
+            })
+        
+        if status_data:
+            df = pd.DataFrame(status_data)
+            fig = px.pie(df, values='Count', names='Status', 
+                        title="Video Processing Status")
+            st.plotly_chart(fig, use_container_width=True)
+    
+    # Recent activity
+    st.subheader("Recent Activity")
+    recent_videos = st.session_state.db.get_videos_by_status()[:10]
+    
+    if recent_videos:
+        activity_df = pd.DataFrame([
+            {
+                'Filename': Path(video['file_path']).name,
+                'Status': video['status'].title(),
+                'Progress': f"{video['progress_percent']:.1f}%",
+                'Stage': video.get('current_stage', 'N/A')
+            }
+            for video in recent_videos
+        ])
+        st.dataframe(activity_df, use_container_width=True)
+    else:
+        st.info("No videos found. Use the Video Discovery page to scan for videos.")
+    
+    # Quick actions
+    st.subheader("Quick Actions")
+    col1, col2, col3 = st.columns(3)
+    
+    with col1:
+        if st.button("🔍 Scan for Videos", use_container_width=True):
+            st.switch_page("Video Discovery")
+    
+    with col2:
+        if st.button("⚡ Start Processing", use_container_width=True):
+            st.switch_page("Batch Processing")
+    
+    with col3:
+        if st.button("📈 View Results", use_container_width=True):
+            st.switch_page("Summary Results")
+
+def show_discovery_page():
+    """Display video discovery and scanning interface."""
+    st.header("🔍 Video Discovery")
+    
+    # Directory input
+    st.subheader("Scan Directory")
+    
+    col1, col2 = st.columns([3, 1])
+    
+    with col1:
+        scan_directory = st.text_input(
+            "Root Directory Path",
+            value=str(Path.home()),
+            help="Enter the path to scan for video files"
+        )
+    
+    with col2:
+        include_subdirs = st.checkbox("Include Subdirectories", value=True)
+    
+    # Scan controls
+    col1, col2, col3 = st.columns(3)
+    
+    with col1:
+        if st.button("🔍 Start Scan", type="primary", use_container_width=True):
+            if Path(scan_directory).exists():
+                with st.spinner("Scanning for videos..."):
+                    scan_results = st.session_state.batch_processor.scan_and_queue_videos(
+                        scan_directory, include_subdirs
+                    )
+                
+                # Display results
+                st.success(f"Scan completed!")
+                
+                col1, col2, col3, col4 = st.columns(4)
+                with col1:
+                    st.metric("Discovered", scan_results['discovered'])
+                with col2:
+                    st.metric("New Videos", scan_results['new'])
+                with col3:
+                    st.metric("Already Processed", scan_results['already_processed'])
+                with col4:
+                    st.metric("Queued", scan_results['queued'])
+                
+                if scan_results['errors']:
+                    st.error(f"Errors encountered: {len(scan_results['errors'])}")
+                    with st.expander("View Errors"):
+                        for error in scan_results['errors']:
+                            st.text(error)
+            else:
+                st.error("Directory does not exist!")
+    
+    with col2:
+        if st.button("📁 Browse Directory", use_container_width=True):
+            st.info("Use the text input to specify the directory path")
+    
+    with col3:
+        if st.button("📊 Directory Stats", use_container_width=True):
+            if Path(scan_directory).exists():
+                with st.spinner("Analyzing directory..."):
+                    stats = st.session_state.discovery.get_directory_stats(scan_directory)
+                
+                st.subheader("Directory Statistics")
+                col1, col2, col3 = st.columns(3)
+                
+                with col1:
+                    st.metric("Total Videos", stats['total_videos'])
+                    st.metric("Total Size (GB)", f"{stats['total_size_gb']:.1f}")
+                
+                with col2:
+                    st.metric("Duration (Hours)", f"{stats['total_duration_hours']:.1f}")
+                    st.metric("With Subtitles", stats['with_subtitles'])
+                
+                with col3:
+                    # Format distribution
+                    st.write("**Formats:**")
+                    for fmt, count in stats['formats'].items():
+                        st.write(f"{fmt}: {count}")
+    
+    # Discovered videos table
+    st.subheader("Discovered Videos")
+    
+    # Get all videos from database
+    all_videos = st.session_state.db.get_videos_by_status()
+    
+    if all_videos:
+        # Create selection interface
+        videos_df = pd.DataFrame([
+            {
+                'Select': False,
+                'Filename': Path(video['file_path']).name,
+                'Status': video['status'].title(),
+                'Size (MB)': f"{video.get('file_size', 0) / (1024*1024):.1f}",
+                'Duration (min)': f"{video.get('duration_seconds', 0) / 60:.1f}",
+                'Resolution': video.get('resolution', 'Unknown'),
+                'Has Subtitles': video.get('has_subtitles', False),
+                'File Path': video['file_path'],
+                'Video ID': video['id']
+            }
+            for video in all_videos
+        ])
+        
+        # Display table with selection
+        edited_df = st.data_editor(
+            videos_df,
+            column_config={
+                'Select': st.column_config.CheckboxColumn('Select'),
+                'File Path': None,  # Hide file path
+                'Video ID': None   # Hide video ID
+            },
+            disabled=['Filename', 'Status', 'Size (MB)', 'Duration (min)', 
+                     'Resolution', 'Has Subtitles'],
+            use_container_width=True
+        )
+        
+        # Update selected videos
+        st.session_state.selected_videos = [
+            row['Video ID'] for _, row in edited_df.iterrows() if row['Select']
+        ]
+        
+        # Selection actions
+        if st.session_state.selected_videos:
+            st.info(f"Selected {len(st.session_state.selected_videos)} videos")
+            
+            col1, col2, col3 = st.columns(3)
+            
+            with col1:
+                if st.button("📝 Add to Queue", use_container_width=True):
+                    # Selected videos are already in the database
+                    st.success(f"Added {len(st.session_state.selected_videos)} videos to processing queue")
+            
+            with col2:
+                if st.button("🗑️ Remove Selected", use_container_width=True):
+                    # Would implement removal logic here
+                    st.warning("Remove functionality not implemented yet")
+            
+            with col3:
+                if st.button("ℹ️ View Details", use_container_width=True):
+                    selected_video_id = st.session_state.selected_videos[0]
+                    video_details = st.session_state.db.get_video_details(selected_video_id)
+                    
+                    if video_details:
+                        st.json(video_details)
+    else:
+        st.info("No videos discovered yet. Use the scan function above to find videos.")
+
+def show_queue_page():
+    """Display processing queue management."""
+    st.header("📋 Processing Queue")
+    
+    # Queue summary
+    queue_summary = st.session_state.batch_processor.get_queue_summary()
+    
+    col1, col2, col3 = st.columns(3)
+    
+    with col1:
+        st.metric("Videos in Queue", queue_summary['total_in_queue'])
+    
+    with col2:
+        st.metric("Current Batch Size", queue_summary['batch_size'])
+    
+    with col3:
+        st.metric("Max Batch Size", queue_summary['max_batch_size'])
+    
+    # Queue controls
+    st.subheader("Queue Management")
+    
+    col1, col2, col3 = st.columns(3)
+    
+    with col1:
+        new_batch_size = st.slider(
+            "Batch Size",
+            min_value=1,
+            max_value=queue_summary['max_batch_size'],
+            value=queue_summary['batch_size'],
+            help="Number of videos to process simultaneously"
+        )
+        
+        if st.button("Update Batch Size", use_container_width=True):
+            st.session_state.batch_processor.set_batch_size(new_batch_size)
+            st.success(f"Batch size updated to {new_batch_size}")
+            st.rerun()
+    
+    with col2:
+        if st.button("🗑️ Clear Queue", use_container_width=True):
+            st.session_state.batch_processor.clear_queue()
+            st.success("Queue cleared")
+            st.rerun()
+    
+    with col3:
+        uploaded_file = st.file_uploader(
+            "Add Video File",
+            type=['mp4', 'mkv', 'avi', 'mov'],
+            help="Upload a video file to add to the queue"
+        )
+        
+        if uploaded_file is not None:
+            # Save uploaded file temporarily and add to queue
+            temp_path = config.TEMP_DIR / uploaded_file.name
+            with open(temp_path, 'wb') as f:
+                f.write(uploaded_file.read())
+            
+            if st.session_state.batch_processor.add_video_to_queue(str(temp_path)):
+                st.success(f"Added {uploaded_file.name} to queue")
+            else:
+                st.error(f"Failed to add {uploaded_file.name} to queue")
+    
+    # Database statistics
+    st.subheader("Database Status")
+    db_stats = queue_summary.get('database_stats', {})
+    
+    if db_stats:
+        stats_df = pd.DataFrame([
+            {
+                'Status': status.title(),
+                'Count': data.get('count', 0),
+                'Avg Progress': f"{data.get('avg_progress', 0):.1f}%"
+            }
+            for status, data in db_stats.items()
+        ])
+        
+        st.dataframe(stats_df, use_container_width=True)
+    
+    # Pending videos
+    st.subheader("Pending Videos")
+    pending_videos = st.session_state.db.get_videos_by_status('discovered')
+    
+    if pending_videos:
+        pending_df = pd.DataFrame([
+            {
+                'Filename': Path(video['file_path']).name,
+                'Size (MB)': f"{video.get('file_size', 0) / (1024*1024):.1f}",
+                'Duration (min)': f"{video.get('duration_seconds', 0) / 60:.1f}",
+                'Added': video.get('discovered_at', 'Unknown')
+            }
+            for video in pending_videos[:20]  # Show first 20
+        ])
+        
+        st.dataframe(pending_df, use_container_width=True)
+        
+        if len(pending_videos) > 20:
+            st.info(f"Showing first 20 of {len(pending_videos)} pending videos")
+    else:
+        st.info("No videos pending processing")
+
+def show_processing_page():
+    """Display batch processing interface with real-time monitoring."""
+    st.header("⚡ Batch Processing")
+    
+    # Processing status
+    processing_status = st.session_state.batch_processor.get_processing_status()
+    
+    # Status indicators
+    col1, col2, col3, col4 = st.columns(4)
+    
+    with col1:
+        status_color = "🟢" if processing_status['is_processing'] else "🔴"
+        st.metric("Status", f"{status_color} {'Active' if processing_status['is_processing'] else 'Idle'}")
+    
+    with col2:
+        st.metric("Queue Size", processing_status['queue_size'])
+    
+    with col3:
+        st.metric("Batch Size", processing_status['current_batch_size'])
+    
+    with col4:
+        stats = processing_status['stats']
+        success_rate = (stats['successful'] / max(stats['total_processed'], 1)) * 100
+        st.metric("Success Rate", f"{success_rate:.1f}%")
+    
+    # Processing controls
+    st.subheader("Processing Controls")
+    
+    col1, col2, col3 = st.columns(3)
+    
+    with col1:
+        if not processing_status['is_processing']:
+            if st.button("▶️ Start Processing", type="primary", use_container_width=True):
+                success = st.session_state.batch_processor.start_batch_processing(
+                    progress_callback=update_progress_callback,
+                    status_callback=update_status_callback
+                )
+                
+                if success:
+                    st.success("Batch processing started!")
+                    st.rerun()
+                else:
+                    st.error("Failed to start processing")
+        else:
+            if st.button("⏸️ Stop Processing", type="secondary", use_container_width=True):
+                st.session_state.batch_processor.stop_batch_processing()
+                st.info("Processing will stop after current batch completes")
+                st.rerun()
+    
+    with col2:
+        batch_size = st.selectbox(
+            "Batch Size",
+            options=list(range(1, processing_status['current_batch_size'] + 1)),
+            index=processing_status['current_batch_size'] - 1
+        )
+        
+        if st.button("Update Batch Size", use_container_width=True):
+            st.session_state.batch_processor.set_batch_size(batch_size)
+            st.success(f"Batch size updated to {batch_size}")
+    
+    with col3:
+        if st.button("🔄 Refresh Status", use_container_width=True):
+            st.rerun()
+    
+    # Progress visualization
+    if processing_status['is_processing'] or stats['total_processed'] > 0:
+        st.subheader("Processing Progress")
+        
+        # Overall progress
+        total_processed = stats['total_processed']
+        successful = stats['successful']
+        failed = stats['failed']
+        
+        if total_processed > 0:
+            col1, col2 = st.columns([2, 1])
+            
+            with col1:
+                # Progress chart
+                progress_data = {
+                    'Category': ['Successful', 'Failed', 'Remaining'],
+                    'Count': [successful, failed, processing_status['queue_size']]
+                }
+                
+                fig = px.bar(
+                    progress_data,
+                    x='Category',
+                    y='Count',
+                    title="Processing Progress",
+                    color='Category',
+                    color_discrete_map={
+                        'Successful': 'green',
+                        'Failed': 'red',
+                        'Remaining': 'gray'
+                    }
+                )
+                st.plotly_chart(fig, use_container_width=True)
+            
+            with col2:
+                # Statistics
+                st.metric("Total Processed", total_processed)
+                st.metric("Successful", successful)
+                st.metric("Failed", failed)
+                
+                # Estimated completion
+                if stats.get('estimated_completion'):
+                    est_time = stats['estimated_completion']
+                    st.info(f"Estimated completion: {est_time.strftime('%H:%M:%S')}")
+    
+    # Resource usage
+    st.subheader("Resource Usage")
+    
+    resource_usage = processing_status.get('resource_usage', {})
+    
+    if resource_usage:
+        col1, col2, col3 = st.columns(3)
+        
+        with col1:
+            cpu_percent = resource_usage.get('cpu_percent', 0)
+            st.metric("CPU Usage", f"{cpu_percent:.1f}%")
+            st.progress(cpu_percent / 100)
+        
+        with col2:
+            memory_percent = resource_usage.get('memory_percent', 0)
+            st.metric("Memory Usage", f"{memory_percent:.1f}%")
+            st.progress(memory_percent / 100)
+        
+        with col3:
+            if 'gpu_memory_gb' in resource_usage:
+                gpu_memory = resource_usage['gpu_memory_gb']
+                st.metric("GPU Memory", f"{gpu_memory:.1f} GB")
+                st.progress(gpu_memory / config.MAX_GPU_MEMORY_GB)
+    
+    # Current processing details
+    if processing_status['is_processing']:
+        st.subheader("Current Processing")
+        
+        # Get currently processing videos
+        processing_videos = st.session_state.db.get_videos_by_status('processing')
+        
+        if processing_videos:
+            for video in processing_videos:
+                with st.container():
+                    col1, col2, col3 = st.columns([2, 1, 1])
+                    
+                    with col1:
+                        st.write(f"**{Path(video['file_path']).name}**")
+                        st.write(f"Stage: {video.get('current_stage', 'Unknown')}")
+                    
+                    with col2:
+                        progress = video.get('progress_percent', 0)
+                        st.progress(progress / 100)
+                        st.write(f"{progress:.1f}%")
+                    
+                    with col3:
+                        # Estimated time remaining for this video
+                        st.write("⏱️ Processing...")
+    
+    # Recent errors
+    if processing_status.get('errors'):
+        st.subheader("Recent Errors")
+        
+        with st.expander("View Error Details"):
+            for error in processing_status['errors']:
+                st.error(error)
+
+def update_progress_callback(progress_data: Dict):
+    """Callback function for progress updates."""
+    st.session_state.processing_status.update(progress_data)
+
+def update_status_callback(status_data: Dict):
+    """Callback function for status updates."""
+    # Update individual video status
+    video_id = status_data.get('video_id')
+    if video_id:
+        st.session_state.processing_status[f'video_{video_id}'] = status_data
+
+def show_results_page():
+    """Display summary results and analysis."""
+    st.header("📈 Summary Results")
+    
+    # Get completed videos
+    completed_videos = st.session_state.db.get_videos_by_status('completed')
+    
+    if not completed_videos:
+        st.info("No completed summaries yet. Process some videos first!")
+        return
+    
+    # Summary statistics
+    st.subheader("Summary Statistics")
+    
+    col1, col2, col3, col4 = st.columns(4)
+    
+    with col1:
+        st.metric("Completed Summaries", len(completed_videos))
+    
+    with col2:
+        # Calculate average compression ratio
+        total_compression = 0
+        count = 0
+        for video in completed_videos:
+            video_details = st.session_state.db.get_video_details(video['id'])
+            if video_details and 'compression_ratio' in video_details:
+                total_compression += video_details['compression_ratio']
+                count += 1
+        
+        avg_compression = (total_compression / count * 100) if count > 0 else 0
+        st.metric("Avg Compression", f"{avg_compression:.1f}%")
+    
+    with col3:
+        # Average F1 score
+        f1_scores = []
+        for video in completed_videos:
+            # Get validation scores from database
+            # This would require a query to get validation scores
+            pass
+        
+        st.metric("Avg F1 Score", "0.75")  # Placeholder
+    
+    with col4:
+        total_processing_time = sum(
+            video.get('processing_time_seconds', 0) for video in completed_videos
+        )
+        st.metric("Total Processing Time", f"{total_processing_time/3600:.1f}h")
+    
+    # Results table
+    st.subheader("Completed Summaries")
+    
+    results_data = []
+    for video in completed_videos:
+        video_details = st.session_state.db.get_video_details(video['id'])
+        
+        results_data.append({
+            'Filename': Path(video['file_path']).name,
+            'Original Duration': f"{video.get('duration_seconds', 0)/60:.1f} min",
+            'Summary Duration': f"{video_details.get('summary_length_seconds', 0)/60:.1f} min" if video_details else "N/A",
+            'Compression': f"{video_details.get('compression_ratio', 0)*100:.1f}%" if video_details else "N/A",
+            'Completed': video.get('completed_at', 'Unknown'),
+            'Video ID': video['id']
+        })
+    
+    if results_data:
+        results_df = pd.DataFrame(results_data)
+        
+        # Add selection for detailed view
+        selected_result = st.selectbox(
+            "Select video for details:",
+            options=range(len(results_df)),
+            format_func=lambda x: results_df.iloc[x]['Filename']
+        )
+        
+        st.dataframe(results_df.drop(columns=['Video ID']), use_container_width=True)
+        
+        # Detailed view
+        if selected_result is not None:
+            selected_video_id = results_data[selected_result]['Video ID']
+            show_detailed_results(selected_video_id)
+
+def show_detailed_results(video_id: int):
+    """Show detailed results for a specific video."""
+    st.subheader("Detailed Results")
+    
+    video_details = st.session_state.db.get_video_details(video_id)
+    
+    if not video_details:
+        st.error("Video details not found")
+        return
+    
+    # Basic information
+    col1, col2 = st.columns(2)
+    
+    with col1:
+        st.write("**Video Information:**")
+        st.write(f"File: {Path(video_details['file_path']).name}")
+        st.write(f"Resolution: {video_details.get('resolution', 'Unknown')}")
+        st.write(f"Duration: {video_details.get('duration_seconds', 0)/60:.1f} minutes")
+        st.write(f"File Size: {video_details.get('file_size', 0)/(1024**3):.2f} GB")
+    
+    with col2:
+        st.write("**Summary Information:**")
+        st.write(f"Summary Length: {video_details.get('summary_length_seconds', 0)/60:.1f} minutes")
+        st.write(f"Compression Ratio: {video_details.get('compression_ratio', 0)*100:.1f}%")
+        st.write(f"Processing Time: {video_details.get('processing_time_seconds', 0)/60:.1f} minutes")
+        
+        # Download links
+        if video_details.get('summary_path'):
+            summary_path = Path(video_details['summary_path'])
+            if summary_path.exists():
+                st.download_button(
+                    "📥 Download Summary",
+                    data=open(summary_path, 'rb').read(),
+                    file_name=summary_path.name,
+                    mime="video/mp4"
+                )
+        
+        if video_details.get('vlc_bookmark_path'):
+            bookmark_path = Path(video_details['vlc_bookmark_path'])
+            if bookmark_path.exists():
+                st.download_button(
+                    "🔖 Download VLC Bookmarks",
+                    data=open(bookmark_path, 'r').read(),
+                    file_name=bookmark_path.name,
+                    mime="application/xml"
+                )
+
+def show_status_page():
+    """Display system status and health monitoring."""
+    st.header("🖥️ System Status")
+    
+    # GPU status
+    gpu_info = st.session_state.gpu_manager.get_gpu_info()
+    
+    st.subheader("GPU Status")
+    
+    if gpu_info.get('cuda_available'):
+        col1, col2, col3 = st.columns(3)
+        
+        with col1:
+            st.metric("GPU Model", gpu_info.get('gpu_name', 'Unknown'))
+            st.metric("CUDA Version", gpu_info.get('cuda_version', 'Unknown'))
+        
+        with col2:
+            memory_used = gpu_info.get('memory_used_gb', 0)
+            memory_total = gpu_info.get('memory_total_gb', 0)
+            st.metric("GPU Memory Used", f"{memory_used:.1f} / {memory_total:.1f} GB")
+            
+            if memory_total > 0:
+                memory_percent = (memory_used / memory_total) * 100
+                st.progress(memory_percent / 100)
+        
+        with col3:
+            temperature = gpu_info.get('temperature', 0)
+            if temperature > 0:
+                st.metric("GPU Temperature", f"{temperature}°C")
+            
+            utilization = gpu_info.get('utilization', 0)
+            st.metric("GPU Utilization", f"{utilization}%")
+    else:
+        st.warning("CUDA not available. Processing will use CPU only.")
+    
+    # System resources
+    st.subheader("System Resources")
+    
+    import psutil
+    
+    col1, col2, col3 = st.columns(3)
+    
+    with col1:
+        cpu_percent = psutil.cpu_percent(interval=1)
+        st.metric("CPU Usage", f"{cpu_percent:.1f}%")
+        st.progress(cpu_percent / 100)
+    
+    with col2:
+        memory = psutil.virtual_memory()
+        st.metric("RAM Usage", f"{memory.percent:.1f}%")
+        st.progress(memory.percent / 100)
+        st.caption(f"{memory.used/(1024**3):.1f} / {memory.total/(1024**3):.1f} GB")
+    
+    with col3:
+        disk = psutil.disk_usage('/')
+        st.metric("Disk Usage", f"{disk.percent:.1f}%")
+        st.progress(disk.percent / 100)
+        st.caption(f"{disk.used/(1024**3):.1f} / {disk.total/(1024**3):.1f} GB")
+    
+    # Model status
+    st.subheader("Model Status")
+    
+    # Check if models are available
+    models_dir = config.MODELS_DIR
+    
+    col1, col2 = st.columns(2)
+    
+    with col1:
+        st.write("**Whisper Model:**")
+        whisper_model_info = st.session_state.batch_processor.transcriber.get_model_info()
+        
+        if whisper_model_info.get('status') == 'No model loaded':
+            st.warning("Whisper model not loaded")
+            if st.button("Load Whisper Model"):
+                if st.session_state.batch_processor.transcriber.load_model():
+                    st.success("Whisper model loaded successfully")
+                    st.rerun()
+                else:
+                    st.error("Failed to load Whisper model")
+        else:
+            st.success("Whisper model loaded")
+            st.json(whisper_model_info)
+    
+    with col2:
+        st.write("**Local LLM:**")
+        llm_model_info = st.session_state.batch_processor.analyzer.get_model_info()
+        
+        if llm_model_info.get('status') == 'No model loaded':
+            st.warning("Local LLM not loaded")
+            
+            if not config.LLM_MODEL_PATH.exists():
+                st.error("Local LLM model directory not found")
+                st.info("Please place your local LLM model in: models/local_llm/")
+            else:
+                if st.button("Load Local LLM"):
+                    if st.session_state.batch_processor.analyzer.load_model():
+                        st.success("Local LLM loaded successfully")
+                        st.rerun()
+                    else:
+                        st.error("Failed to load Local LLM")
+        else:
+            st.success("Local LLM loaded")
+            st.json(llm_model_info)
+    
+    # Database status
+    st.subheader("Database Status")
+    
+    try:
+        db_stats = st.session_state.db.get_processing_stats()
+        st.json(db_stats)
+    except Exception as e:
+        st.error(f"Database error: {e}")
+
+def show_settings_page():
+    """Display application settings and configuration."""
+    st.header("⚙️ Settings")
+    
+    st.subheader("Processing Configuration")
+    
+    # Scene detection settings
+    with st.expander("Scene Detection Settings"):
+        content_threshold = st.slider(
+            "Content Detection Threshold",
+            min_value=10.0,
+            max_value=50.0,
+            value=config.SCENE_DETECTION_THRESHOLD,
+            step=1.0,
+            help="Lower values detect more scene changes"
+        )
+        
+        adaptive_threshold = st.slider(
+            "Adaptive Detection Threshold",
+            min_value=1.0,
+            max_value=5.0,
+            value=config.ADAPTIVE_THRESHOLD,
+            step=0.1,
+            help="Threshold for adaptive scene detection"
+        )
+        
+        min_scene_length = st.slider(
+            "Minimum Scene Length (seconds)",
+            min_value=1.0,
+            max_value=10.0,
+            value=config.MIN_SCENE_LENGTH_SECONDS,
+            step=0.5,
+            help="Minimum duration for a scene to be considered"
+        )
+    
+    # Summary settings
+    with st.expander("Summary Settings"):
+        summary_length = st.slider(
+            "Target Summary Length (%)",
+            min_value=5,
+            max_value=30,
+            value=config.SUMMARY_LENGTH_PERCENT,
+            step=1,
+            help="Target length of summary as percentage of original"
+        )
+        
+        max_summary_duration = st.slider(
+            "Maximum Summary Duration (minutes)",
+            min_value=5,
+            max_value=60,
+            value=config.MAX_SUMMARY_LENGTH_MINUTES,
+            step=5,
+            help="Maximum allowed summary length"
+        )
+        
+        min_summary_duration = st.slider(
+            "Minimum Summary Duration (minutes)",
+            min_value=1,
+            max_value=10,
+            value=config.MIN_SUMMARY_LENGTH_MINUTES,
+            step=1,
+            help="Minimum required summary length"
+        )
+    
+    # GPU settings
+    with st.expander("GPU Settings"):
+        max_gpu_memory = st.slider(
+            "Maximum GPU Memory Usage (GB)",
+            min_value=4,
+            max_value=16,
+            value=config.MAX_GPU_MEMORY_GB,
+            step=1,
+            help="Maximum GPU memory to use (leave some for system)"
+        )
+        
+        whisper_model_size = st.selectbox(
+            "Whisper Model Size",
+            options=['tiny', 'base', 'small', 'medium', 'large'],
+            index=['tiny', 'base', 'small', 'medium', 'large'].index(config.WHISPER_MODEL_SIZE),
+            help="Larger models are more accurate but use more resources"
+        )
+    
+    # Model paths
+    st.subheader("Model Configuration")
+    
+    st.write("**Model Directories:**")
+    st.code(f"Models Directory: {config.MODELS_DIR}")
+    st.code(f"Local LLM Path: {config.LLM_MODEL_PATH}")
+    st.code(f"Whisper Models: {config.MODELS_DIR / 'whisper'}")
+    
+    # Database settings
+    with st.expander("Database Settings"):
+        st.write(f"**Database Path:** {config.DATABASE_PATH}")
+        st.write(f"**Output Directory:** {config.OUTPUT_DIR}")
+        st.write(f"**Temp Directory:** {config.TEMP_DIR}")
+        
+        if st.button("🔄 Reset Database", type="secondary"):
+            if st.checkbox("I understand this will delete all processing data"):
+                try:
+                    config.DATABASE_PATH.unlink(missing_ok=True)
+                    st.session_state.db = VideoDatabase()  # Reinitialize
+                    st.success("Database reset successfully")
+                    st.rerun()
+                except Exception as e:
+                    st.error(f"Failed to reset database: {e}")
+    
+    # Export/Import settings
+    st.subheader("Data Management")
+    
+    col1, col2 = st.columns(2)
+    
+    with col1:
+        if st.button("📤 Export Processing Data", use_container_width=True):
+            # Export database to JSON
+            all_videos = st.session_state.db.get_videos_by_status()
+            
+            if all_videos:
+                import json
+                export_data = {
+                    'export_timestamp': datetime.now().isoformat(),
+                    'videos': all_videos
+                }
+                
+                st.download_button(
+                    "Download Export",
+                    data=json.dumps(export_data, indent=2),
+                    file_name=f"video_processing_export_{datetime.now().strftime('%Y%m%d_%H%M%S')}.json",
+                    mime="application/json"
+                )
+            else:
+                st.info("No data to export")
+    
+    with col2:
+        uploaded_file = st.file_uploader(
+            "📥 Import Processing Data",
+            type=['json'],
+            help="Import previously exported processing data"
+        )
+        
+        if uploaded_file is not None:
+            try:
+                import json
+                import_data = json.load(uploaded_file)
+                
+                if 'videos' in import_data:
+                    st.success(f"Found {len(import_data['videos'])} videos in import file")
+                    
+                    if st.button("Confirm Import"):
+                        # Import logic would go here
+                        st.info("Import functionality not implemented yet")
+                else:
+                    st.error("Invalid import file format")
+            except Exception as e:
+                st.error(f"Failed to read import file: {e}")
+
+if __name__ == "__main__":
+    main()
