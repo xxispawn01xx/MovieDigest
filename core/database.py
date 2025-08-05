@@ -126,6 +126,8 @@ class VideoDatabase:
             ))
             
             video_id = cursor.lastrowid
+            if video_id is None:
+                raise ValueError("Failed to insert video")
             
             # Initialize processing status
             cursor.execute("""
@@ -135,7 +137,7 @@ class VideoDatabase:
             
             return video_id
     
-    def get_videos_by_status(self, status: str = None) -> List[Dict]:
+    def get_videos_by_status(self, status: Optional[str] = None) -> List[Dict]:
         """Get videos filtered by processing status."""
         with sqlite3.connect(self.db_path) as conn:
             conn.row_factory = sqlite3.Row
@@ -160,14 +162,14 @@ class VideoDatabase:
             return [dict(row) for row in cursor.fetchall()]
     
     def update_processing_status(self, video_id: int, status: str, 
-                               progress: float = None, stage: str = None,
-                               error_message: str = None):
+                               progress: Optional[float] = None, stage: Optional[str] = None,
+                               error_message: Optional[str] = None):
         """Update processing status for a video."""
         with sqlite3.connect(self.db_path) as conn:
             cursor = conn.cursor()
             
             updates = ["status = ?"]
-            params = [status]
+            params: List = [status]
             
             if progress is not None:
                 updates.append("progress_percent = ?")
@@ -193,6 +195,10 @@ class VideoDatabase:
                 SET {', '.join(updates)}
                 WHERE video_id = ?
             """, params)
+    
+    def update_video_status(self, video_id: int, status: str):
+        """Update the status of a video (alias for update_processing_status)."""
+        self.update_processing_status(video_id, status)
     
     def add_scene_data(self, video_id: int, scenes: List[Dict]):
         """Add scene detection data for a video."""
@@ -257,7 +263,7 @@ class VideoDatabase:
             ))
     
     def add_validation_score(self, video_id: int, metric_name: str, 
-                           score: float, benchmark_dataset: str = None):
+                           score: float, benchmark_dataset: Optional[str] = None):
         """Add validation score for a video."""
         with sqlite3.connect(self.db_path) as conn:
             cursor = conn.cursor()
