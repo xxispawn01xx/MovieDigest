@@ -11,6 +11,7 @@ import time
 import threading
 from typing import Dict, List
 import logging
+from datetime import datetime
 
 # Core modules
 from core.database import VideoDatabase
@@ -260,8 +261,8 @@ def show_discovery_page():
                 'Select': False,
                 'Filename': Path(video['file_path']).name,
                 'Status': video['status'].title(),
-                'Size (MB)': f"{video.get('file_size', 0) / (1024*1024):.1f}",
-                'Duration (min)': f"{video.get('duration_seconds', 0) / 60:.1f}",
+                'Size (MB)': f"{(video.get('file_size') or 0) / (1024*1024):.1f}",
+                'Duration (min)': f"{(video.get('duration_seconds') or 0) / 60:.1f}",
                 'Resolution': video.get('resolution', 'Unknown'),
                 'Has Subtitles': video.get('has_subtitles', False),
                 'File Path': video['file_path'],
@@ -285,7 +286,7 @@ def show_discovery_page():
         
         # Update selected videos
         st.session_state.selected_videos = [
-            row['Video ID'] for _, row in edited_df.iterrows() if row['Select']
+            row['Video ID'] for _, row in edited_df.iterrows() if row['Select'] == True
         ]
         
         # Selection actions
@@ -399,8 +400,8 @@ def show_queue_page():
         pending_df = pd.DataFrame([
             {
                 'Filename': Path(video['file_path']).name,
-                'Size (MB)': f"{video.get('file_size', 0) / (1024*1024):.1f}",
-                'Duration (min)': f"{video.get('duration_seconds', 0) / 60:.1f}",
+                'Size (MB)': f"{(video.get('file_size') or 0) / (1024*1024):.1f}",
+                'Duration (min)': f"{(video.get('duration_seconds') or 0) / 60:.1f}",
                 'Added': video.get('discovered_at', 'Unknown')
             }
             for video in pending_videos[:20]  # Show first 20
