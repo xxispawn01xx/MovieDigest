@@ -9,10 +9,15 @@ from typing import List, Dict, Optional, Tuple
 import logging
 import re
 
-from transformers import (
-    AutoTokenizer, AutoModelForCausalLM, 
-    pipeline, GenerationConfig
-)
+try:
+    from transformers import (
+        AutoTokenizer, AutoModelForCausalLM, 
+        pipeline, GenerationConfig
+    )
+    TRANSFORMERS_AVAILABLE = True
+except ImportError:
+    TRANSFORMERS_AVAILABLE = False
+    logger.warning("Transformers not available. LLM features will be disabled.")
 
 import config
 
