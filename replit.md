@@ -18,6 +18,8 @@ Preferred communication style: Simple, everyday language.
 - **Audio Analysis**: Built comprehensive audio feature extraction including speech detection and music analysis
 - **Smart Summarization**: Implemented multi-algorithm summarization engine with hybrid, narrative, and importance-based methods
 - **Documentation**: Created comprehensive README.md with architecture overview, installation guide, and usage instructions
+- **Git Integration**: Added comprehensive .gitignore file for all generated files, models, and output directories
+- **Processing Queue Fix**: Resolved issue where "Add to Queue" button didn't start processing by connecting database status with internal queue
 - **Error Handling**: Fixed all LSP diagnostics and improved robustness throughout the codebase
 - **Fallback Mode**: Ensured app works without transformers library using intelligent fallback analysis
 

@@ -1,0 +1,112 @@
+# Video Summarization Engine - Generated Files and Downloads
+
+# Model directories - Downloaded AI models
+models/whisper/
+models/llm/
+*.bin
+*.pt
+*.pth
+*.safetensors
+*.gguf
+*.onnx
+
+# Temporary processing files
+temp/
+*.tmp
+*.temp
+
+# Output directories - Generated summaries and exports
+output/
+output/bookmarks/
+output/summaries/
+output/exports/
+
+# Database files - Processing data
+*.db
+*.sqlite
+*.sqlite3
+video_processing.db
+
+# Processing logs and cache
+*.log
+logs/
+cache/
+__pycache__/
+*.pyc
+*.pyo
+*.pyd
+
+# Video files - User content (optional - uncomment if needed)
+# *.mp4
+# *.mkv
+# *.avi
+# *.mov
+# *.wmv
+# *.flv
+# *.webm
+
+# Subtitle files (optional - uncomment if needed)
+# *.srt
+# *.vtt
+# *.ass
+# *.ssa
+
+# Generated thumbnails and previews
+thumbnails/
+previews/
+*.jpg
+*.jpeg
+*.png
+*.bmp
+*.gif
+
+# System files
+.DS_Store
+Thumbs.db
+desktop.ini
+
+# IDE and editor files
+.vscode/
+.idea/
+*.swp
+*.swo
+*~
+
+# Virtual environments
+venv/
+env/
+.env
+.venv
+
+# Python package files
+dist/
+build/
+*.egg-info/
+
+# Configuration files with sensitive data
+config_local.py
+secrets.env
+
+# GPU computation cache
+.nv/
+.cuda/
+
+# FFmpeg temp files
+ffmpeg_*.txt
+ffprobe_*.txt
+
+# Backup files
+*.bak
+*.backup
+*.old
+
+# Large temporary data files
+*.npy
+*.npz
+*.h5
+*.hdf5
+
+# Export formats
+*.json.backup
+*.csv.backup
+*.xml.backup

@@ -595,17 +595,6 @@ def show_processing_page():
             for error in processing_status['errors']:
                 st.error(error)
 
-def update_progress_callback(progress_data: Dict):
-    """Callback function for progress updates."""
-    st.session_state.processing_status.update(progress_data)
-
-def update_status_callback(status_data: Dict):
-    """Callback function for status updates."""
-    # Update individual video status
-    video_id = status_data.get('video_id')
-    if video_id:
-        st.session_state.processing_status[f'video_{video_id}'] = status_data
-
 def show_results_page():
     """Display summary results and analysis."""
     st.header("📈 Summary Results")
