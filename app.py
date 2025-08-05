@@ -196,15 +196,64 @@ def show_discovery_page():
     """Display video discovery and scanning interface."""
     st.header("🔍 Video Discovery")
     
+    # Recent Folders section
+    st.subheader("📂 Recent Folders")
+    recent_folders = st.session_state.db.get_recent_folders(limit=5)
+    
+    if recent_folders:
+        # Create columns for recent folder buttons
+        cols = st.columns(min(len(recent_folders), 3))
+        
+        for i, folder in enumerate(recent_folders[:3]):  # Show max 3 in one row
+            with cols[i]:
+                folder_name = Path(folder['folder_path']).name or "Root"
+                last_scan = folder['last_scanned'][:10] if folder['last_scanned'] else 'Unknown'
+                button_text = f"📁 {folder_name}\n{folder['video_count']} videos • {last_scan}"
+                
+                if st.button(button_text, use_container_width=True, key=f"recent_{i}"):
+                    st.session_state.scan_directory = folder['folder_path']
+                    st.rerun()
+        
+        # Show more recent folders in expandable section
+        if len(recent_folders) > 3:
+            with st.expander(f"Show {len(recent_folders) - 3} more recent folders"):
+                for j, folder in enumerate(recent_folders[3:]):
+                    col1, col2, col3, col4 = st.columns([3, 1, 1, 1])
+                    
+                    with col1:
+                        folder_name = Path(folder['folder_path']).name or "Root"
+                        if st.button(f"📁 {folder_name}", 
+                                   key=f"recent_exp_{j}"):
+                            st.session_state.scan_directory = folder['folder_path']
+                            st.rerun()
+                    
+                    with col2:
+                        st.text(f"{folder['video_count']}")
+                    
+                    with col3:
+                        last_scan = folder['last_scanned'][:10] if folder['last_scanned'] else 'Unknown'
+                        st.text(last_scan)
+                    
+                    with col4:
+                        if st.button("🗑️", key=f"remove_{j}", 
+                                   help="Remove from recent"):
+                            st.session_state.db.remove_recent_folder(folder['folder_path'])
+                            st.rerun()
+    else:
+        st.info("No recent folders. Scan a directory to get started!")
+    
     # Directory input
     st.subheader("Scan Directory")
     
     col1, col2 = st.columns([3, 1])
     
     with col1:
+        # Use session state for directory if set by recent folder click
+        default_dir = getattr(st.session_state, 'scan_directory', str(Path.home()))
+        
         scan_directory = st.text_input(
             "Root Directory Path",
-            value=str(Path.home()),
+            value=default_dir,
             help="Enter the path to scan for video files"
         )
     

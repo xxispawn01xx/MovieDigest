@@ -99,10 +99,21 @@ class VideoDatabase:
                     FOREIGN KEY (video_id) REFERENCES videos (id)
                 );
                 
+                CREATE TABLE IF NOT EXISTS recent_folders (
+                    id INTEGER PRIMARY KEY AUTOINCREMENT,
+                    folder_path TEXT UNIQUE NOT NULL,
+                    last_scanned TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+                    video_count INTEGER DEFAULT 0,
+                    total_size INTEGER DEFAULT 0,
+                    scan_duration REAL DEFAULT 0,
+                    description TEXT
+                );
+                
                 CREATE INDEX IF NOT EXISTS idx_videos_path ON videos(file_path);
                 CREATE INDEX IF NOT EXISTS idx_processing_status ON processing_status(status);
                 CREATE INDEX IF NOT EXISTS idx_scenes_video ON scene_data(video_id);
                 CREATE INDEX IF NOT EXISTS idx_transcriptions_video ON transcriptions(video_id);
+                CREATE INDEX IF NOT EXISTS idx_recent_folders_scanned ON recent_folders(last_scanned DESC);
             """)
     
     def add_video(self, file_path: str, metadata: Dict) -> int:
@@ -212,6 +223,40 @@ class VideoDatabase:
             affected_rows = cursor.rowcount
             logger.info(f"Cleared {affected_rows} videos from queue")
             return affected_rows
+    
+    def add_recent_folder(self, folder_path: str, video_count: int = 0, 
+                         total_size: int = 0, scan_duration: float = 0, 
+                         description: Optional[str] = None):
+        """Add or update a recent folder scan record."""
+        with sqlite3.connect(self.db_path) as conn:
+            cursor = conn.cursor()
+            cursor.execute("""
+                INSERT OR REPLACE INTO recent_folders 
+                (folder_path, last_scanned, video_count, total_size, scan_duration, description)
+                VALUES (?, CURRENT_TIMESTAMP, ?, ?, ?, ?)
+            """, (folder_path, video_count, total_size, scan_duration, description))
+            logger.info(f"Added recent folder: {folder_path}")
+    
+    def get_recent_folders(self, limit: int = 10) -> List[Dict]:
+        """Get recently scanned folders ordered by last scan time."""
+        with sqlite3.connect(self.db_path) as conn:
+            conn.row_factory = sqlite3.Row
+            cursor = conn.cursor()
+            cursor.execute("""
+                SELECT folder_path, last_scanned, video_count, total_size, 
+                       scan_duration, description
+                FROM recent_folders 
+                ORDER BY last_scanned DESC 
+                LIMIT ?
+            """, (limit,))
+            return [dict(row) for row in cursor.fetchall()]
+    
+    def remove_recent_folder(self, folder_path: str):
+        """Remove a folder from recent folders list."""
+        with sqlite3.connect(self.db_path) as conn:
+            cursor = conn.cursor()
+            cursor.execute("DELETE FROM recent_folders WHERE folder_path = ?", (folder_path,))
+            return cursor.rowcount > 0
     
     def add_scene_data(self, video_id: int, scenes: List[Dict]):
         """Add scene detection data for a video."""

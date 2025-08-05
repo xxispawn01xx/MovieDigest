@@ -19,10 +19,11 @@ logger = logging.getLogger(__name__)
 class VideoDiscovery:
     """Discovers and analyzes video files in specified directories."""
     
-    def __init__(self):
+    def __init__(self, db=None):
         """Initialize video discovery engine."""
         self.supported_formats = config.SUPPORTED_FORMATS
         self.subtitle_formats = config.SUBTITLE_FORMATS
+        self.db = db
     
     def scan_directory(self, root_path: str, include_subdirs: bool = True) -> Generator[Dict, None, None]:
         """
@@ -42,6 +43,9 @@ class VideoDiscovery:
             return
         
         logger.info(f"Scanning directory: {root_dir}")
+        scan_start_time = datetime.now()
+        video_count = 0
+        total_size = 0
         
         # Find all video files
         pattern = "**/*" if include_subdirs else "*"
@@ -51,9 +55,26 @@ class VideoDiscovery:
                 try:
                     metadata = self.extract_metadata(file_path)
                     if metadata:
+                        video_count += 1
+                        total_size += metadata.get('file_size', 0)
                         yield metadata
                 except Exception as e:
                     logger.error(f"Error processing {file_path}: {e}")
+        
+        # Record this scan in recent folders if database is available
+        if self.db:
+            scan_duration = (datetime.now() - scan_start_time).total_seconds()
+            description = f"Found {video_count} videos" if video_count > 0 else "No videos found"
+            try:
+                self.db.add_recent_folder(
+                    folder_path=str(root_dir),
+                    video_count=video_count,
+                    total_size=total_size,
+                    scan_duration=scan_duration,
+                    description=description
+                )
+            except Exception as e:
+                logger.warning(f"Could not save recent folder: {e}")
     
     def extract_metadata(self, file_path: Path) -> Optional[Dict]:
         """

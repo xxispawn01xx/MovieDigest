@@ -34,7 +34,7 @@ class BatchProcessor:
     def __init__(self):
         """Initialize batch processor with all required components."""
         self.db = VideoDatabase()
-        self.discovery = VideoDiscovery()
+        self.discovery = VideoDiscovery(db=self.db)
         self.scene_detector = SceneDetector()
         self.transcriber = OfflineTranscriber()
         self.analyzer = NarrativeAnalyzer()
