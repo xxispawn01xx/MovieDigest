@@ -9,17 +9,20 @@ Preferred communication style: Simple, everyday language.
 # System Architecture
 
 ## Frontend Architecture
-- **Streamlit Web Interface**: Single-page application with sidebar navigation and real-time progress tracking
-- **State Management**: Session-based state management for user preferences, processing status, and selected videos
-- **Visualization**: Plotly-based charts and graphs for displaying processing metrics and validation scores
+- **Streamlit Web Interface**: Multi-page application with sidebar navigation including Model Management, Export Controls, and real-time progress tracking
+- **State Management**: Session-based state management for user preferences, processing status, selected videos, and model configurations
+- **Visualization**: Plotly-based charts and graphs for displaying processing metrics, validation scores, and system status
+- **Model Management UI**: Interactive interface for downloading Whisper models, checking system requirements, and managing LLM models
 
 ## Core Processing Pipeline
 - **Video Discovery**: Scans directories for supported video formats (MP4, MKV, AVI, MOV, WMV) and extracts metadata using OpenCV and ffprobe
 - **Scene Detection**: Multi-algorithm approach using PySceneDetect with content-based, adaptive, and threshold detection methods
 - **Audio Transcription**: Offline speech-to-text using OpenAI's Whisper models with GPU acceleration
-- **Narrative Analysis**: Local LLM integration for understanding film structure and identifying key narrative moments
+- **Narrative Analysis**: Local LLM integration for understanding film structure and identifying key narrative moments (with fallback mode)
 - **Video Summarization**: Combines all analysis to create compressed summaries targeting 15% of original length
 - **VLC Bookmark Generation**: Creates XSPF playlist files with bookmarks for key scenes
+- **Export Management**: Multiple output formats including JSON summaries, VLC bookmarks, and markdown reports
+- **Model Management**: Automated download and management of Whisper models with intelligent recommendations
 
 ## Data Storage
 - **SQLite Database**: Local database tracking video metadata, processing status, scene data, transcription results, and validation metrics

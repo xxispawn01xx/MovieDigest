@@ -122,9 +122,9 @@ class BatchProcessor:
             scan_results['errors'].append(str(e))
             return scan_results
     
-    def start_batch_processing(self, batch_size: int = None, 
-                              progress_callback: Callable = None,
-                              status_callback: Callable = None) -> bool:
+    def start_batch_processing(self, batch_size: Optional[int] = None, 
+                              progress_callback: Optional[Callable] = None,
+                              status_callback: Optional[Callable] = None) -> bool:
         """
         Start batch processing of queued videos.
         
@@ -418,29 +418,29 @@ class BatchProcessor:
             True if added successfully
         """
         try:
-            video_path = Path(video_path)
+            video_path_obj = Path(video_path)
             
-            if not video_path.exists():
-                logger.error(f"Video file not found: {video_path}")
+            if not video_path_obj.exists():
+                logger.error(f"Video file not found: {video_path_obj}")
                 return False
             
             # Extract metadata
-            metadata = self.discovery.extract_metadata(video_path)
+            metadata = self.discovery.extract_metadata(video_path_obj)
             if not metadata:
-                logger.error(f"Failed to extract metadata: {video_path}")
+                logger.error(f"Failed to extract metadata: {video_path_obj}")
                 return False
             
             # Add to database
-            video_id = self.db.add_video(str(video_path), metadata)
+            video_id = self.db.add_video(str(video_path_obj), metadata)
             
             # Add to queue
             self.processing_queue.put({
                 'video_id': video_id,
-                'file_path': str(video_path),
+                'file_path': str(video_path_obj),
                 'metadata': metadata
             })
             
-            logger.info(f"Added to queue: {video_path.name}")
+            logger.info(f"Added to queue: {video_path_obj.name}")
             return True
             
         except Exception as e:

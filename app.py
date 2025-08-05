@@ -16,6 +16,9 @@ import logging
 from core.database import VideoDatabase
 from core.video_discovery import VideoDiscovery
 from core.batch_processor import BatchProcessor
+from core.validation import ValidationMetrics
+from core.export_manager import ExportManager
+from core.model_downloader import ModelDownloader
 from utils.gpu_manager import GPUManager
 from utils.progress_tracker import ProgressTracker
 import config
@@ -40,6 +43,9 @@ if 'initialized' not in st.session_state:
     st.session_state.batch_processor = BatchProcessor()
     st.session_state.gpu_manager = GPUManager()
     st.session_state.progress_tracker = ProgressTracker()
+    st.session_state.validation_metrics = ValidationMetrics()
+    st.session_state.export_manager = ExportManager()
+    st.session_state.model_downloader = ModelDownloader()
     st.session_state.processing_status = {}
     st.session_state.selected_videos = []
     st.session_state.initialized = True
@@ -55,7 +61,7 @@ def main():
         page = st.selectbox(
             "Choose a page:",
             ["Overview", "Video Discovery", "Processing Queue", "Batch Processing", 
-             "Summary Results", "System Status", "Settings"]
+             "Summary Results", "Model Management", "System Status", "Settings"]
         )
     
     # Route to selected page
@@ -69,6 +75,8 @@ def main():
         show_processing_page()
     elif page == "Summary Results":
         show_results_page()
+    elif page == "Model Management":
+        show_model_management_page()
     elif page == "System Status":
         show_status_page()
     elif page == "Settings":
@@ -763,8 +771,177 @@ def show_status_page():
     
     # Check if models are available
     models_dir = config.MODELS_DIR
+    requirements = st.session_state.model_downloader.check_model_requirements()
     
     col1, col2 = st.columns(2)
+    
+    with col1:
+        st.write("**Whisper Models:**")
+        if requirements['whisper_available']:
+            st.success("✅ Whisper available")
+            if requirements['whisper_model_downloaded']:
+                st.success("✅ Whisper models downloaded")
+            else:
+                st.warning("⚠️ No Whisper models downloaded")
+        else:
+            st.error("❌ Whisper not available")
+    
+    with col2:
+        st.write("**LLM Models:**")
+        if requirements['transformers_available']:
+            st.success("✅ Transformers available")
+            if requirements['llm_model_available']:
+                st.success("✅ Local LLM models found")
+            else:
+                st.warning("⚠️ No LLM models found")
+        else:
+            st.error("❌ Transformers not available")
+
+def show_model_management_page():
+    """Display model management interface."""
+    st.header("🤖 Model Management")
+    
+    model_downloader = st.session_state.model_downloader
+    
+    # Model requirements check
+    st.subheader("System Requirements")
+    requirements = model_downloader.check_model_requirements()
+    
+    col1, col2, col3, col4 = st.columns(4)
+    
+    with col1:
+        if requirements['whisper_available']:
+            st.success("✅ Whisper")
+        else:
+            st.error("❌ Whisper")
+    
+    with col2:
+        if requirements['transformers_available']:
+            st.success("✅ Transformers")
+        else:
+            st.error("❌ Transformers")
+    
+    with col3:
+        if requirements['whisper_model_downloaded']:
+            st.success("✅ Whisper Models")
+        else:
+            st.warning("⚠️ No Models")
+    
+    with col4:
+        if requirements['storage_space_ok']:
+            st.success("✅ Storage OK")
+        else:
+            st.error("❌ Low Storage")
+    
+    # Whisper Model Management
+    st.subheader("Whisper Models")
+    
+    available_models = model_downloader.list_available_whisper_models()
+    downloaded_models = model_downloader.list_downloaded_whisper_models()
+    
+    col1, col2 = st.columns([2, 1])
+    
+    with col1:
+        st.write("**Available Models:**")
+        for model_name, description in available_models.items():
+            is_downloaded = model_name in downloaded_models
+            status = "✅ Downloaded" if is_downloaded else "⬇️ Available"
+            st.write(f"- **{model_name}**: {description} ({status})")
+    
+    with col2:
+        st.write("**Download Model:**")
+        selected_model = st.selectbox(
+            "Choose model to download:",
+            list(available_models.keys()),
+            help="Select a Whisper model to download for offline use"
+        )
+        
+        if st.button("Download Model", key="download_whisper"):
+            if selected_model not in downloaded_models:
+                with st.spinner(f"Downloading {selected_model}..."):
+                    success = model_downloader.download_whisper_model(selected_model)
+                    if success:
+                        st.success(f"✅ {selected_model} downloaded successfully!")
+                        st.rerun()
+                    else:
+                        st.error(f"❌ Failed to download {selected_model}")
+            else:
+                st.info(f"{selected_model} is already downloaded")
+    
+    # Model Recommendations
+    st.subheader("Model Recommendations")
+    
+    col1, col2 = st.columns(2)
+    
+    with col1:
+        video_duration = st.number_input(
+            "Video Duration (minutes):",
+            min_value=1,
+            max_value=300,
+            value=90,
+            help="Enter typical video duration for model recommendation"
+        )
+        
+        quality_pref = st.selectbox(
+            "Quality Preference:",
+            ["speed", "balanced", "quality"],
+            index=1,
+            help="Choose your priority: speed, balanced, or quality"
+        )
+    
+    with col2:
+        recommended = model_downloader.suggest_whisper_model(video_duration, quality_pref)
+        st.write("**Recommended Model:**")
+        st.info(f"🎯 **{recommended}** - {available_models[recommended]}")
+        
+        if recommended not in downloaded_models:
+            if st.button("Download Recommended", key="download_recommended"):
+                with st.spinner(f"Downloading {recommended}..."):
+                    success = model_downloader.download_whisper_model(recommended)
+                    if success:
+                        st.success(f"✅ {recommended} downloaded!")
+                        st.rerun()
+    
+    # LLM Model Management
+    st.subheader("LLM Models")
+    
+    if requirements['transformers_available']:
+        st.info("🎯 **Transformers Available** - You can now use local LLM models for narrative analysis")
+        
+        st.write("**Supported Model Formats:**")
+        st.write("- Hugging Face transformers models")
+        st.write("- GGUF format models")
+        st.write("- SafeTensors format")
+        
+        st.write("**Installation Instructions:**")
+        st.code("pip install transformers", language="bash")
+        
+        llm_dir = model_downloader.llm_dir
+        st.write(f"**Model Directory:** `{llm_dir}`")
+        
+        if requirements['llm_model_available']:
+            st.success("✅ Local LLM models detected")
+        else:
+            st.warning("⚠️ No LLM models found. Place model files in the models/llm directory.")
+    else:
+        st.error("❌ **Transformers Not Available**")
+        st.write("To enable LLM narrative analysis:")
+        st.code("pip install transformers torch", language="bash")
+    
+    # Export model information
+    st.subheader("Model Information Export")
+    
+    if st.button("Generate Model Info File"):
+        info_file = model_downloader.create_model_info_file()
+        st.success(f"✅ Model info exported to: {info_file}")
+        
+        with open(info_file, 'r') as f:
+            st.download_button(
+                "📥 Download Model Info",
+                data=f.read(),
+                file_name="model_info.json",
+                mime="application/json"
+            )
     
     with col1:
         st.write("**Whisper Model:**")

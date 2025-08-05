@@ -18,21 +18,42 @@ try:
 except ImportError:
     TRANSFORMERS_AVAILABLE = False
     # Create dummy classes to prevent import errors
-    class AutoTokenizer:
+    class DummyTokenizer:
+        def __init__(self):
+            self.eos_token_id = 2
+        
         @staticmethod
         def from_pretrained(*args, **kwargs):
-            return None
+            return DummyTokenizer()
+        
+        def __call__(self, *args, **kwargs):
+            return {"input_ids": [[1, 2, 3]], "attention_mask": [[1, 1, 1]]}
     
-    class AutoModelForCausalLM:
+    class DummyModel:
         @staticmethod
         def from_pretrained(*args, **kwargs):
-            return None
+            return DummyModel()
+        
+        def parameters(self):
+            return []
+    
+    class DummyPipeline:
+        def __init__(self, *args, **kwargs):
+            pass
+        
+        def __call__(self, *args, **kwargs):
+            return [{"generated_text": "Dummy analysis - transformers not available"}]
+    
+    class DummyGenerationConfig:
+        pass
+    
+    # Assign dummy classes to the expected names
+    AutoTokenizer = DummyTokenizer
+    AutoModelForCausalLM = DummyModel
+    GenerationConfig = DummyGenerationConfig
     
     def pipeline(*args, **kwargs):
-        return None
-    
-    class GenerationConfig:
-        pass
+        return DummyPipeline(*args, **kwargs)
 
 import config
 
