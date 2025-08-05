@@ -120,6 +120,8 @@ utils/
 
 5. **Access the Web Interface**
    Open your browser to: `http://localhost:5000`
+   
+   **Note**: The server binds to `0.0.0.0:5000` but you access it via localhost for offline use.
 
 ## Usage Guide
 
@@ -208,6 +210,8 @@ TEMP_DIR = Path("temp")
 headless = true
 address = "0.0.0.0"
 port = 5000
+
+# Note: Server binds to 0.0.0.0 for compatibility but access via localhost:5000
 
 [theme]
 base = "dark"
