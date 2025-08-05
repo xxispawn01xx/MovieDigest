@@ -6,6 +6,16 @@ The Video Summarization Engine is an offline, GPU-accelerated application for pr
 
 Preferred communication style: Simple, everyday language.
 
+# Recent Changes
+
+## Latest Updates (Aug 5, 2025)
+- **Enhanced Export System**: Added comprehensive Export Manager with JSON, VLC bookmarks, and markdown report generation
+- **Model Management**: Built intelligent Model Downloader with Whisper model recommendations and automated downloads
+- **UI Improvements**: Created Model Management page with system requirements checking and download interface
+- **VLC Integration**: Added specialized VLC bookmark generator for creating chapter-based and key moment playlists
+- **Error Handling**: Fixed all LSP diagnostics and improved robustness throughout the codebase
+- **Fallback Mode**: Ensured app works without transformers library using intelligent fallback analysis
+
 # System Architecture
 
 ## Frontend Architecture

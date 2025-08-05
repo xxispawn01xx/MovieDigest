@@ -19,6 +19,7 @@ from core.batch_processor import BatchProcessor
 from core.validation import ValidationMetrics
 from core.export_manager import ExportManager
 from core.model_downloader import ModelDownloader
+from core.vlc_bookmarks import VLCBookmarkGenerator
 from utils.gpu_manager import GPUManager
 from utils.progress_tracker import ProgressTracker
 import config
@@ -46,6 +47,7 @@ if 'initialized' not in st.session_state:
     st.session_state.validation_metrics = ValidationMetrics()
     st.session_state.export_manager = ExportManager()
     st.session_state.model_downloader = ModelDownloader()
+    st.session_state.vlc_bookmarks = VLCBookmarkGenerator()
     st.session_state.processing_status = {}
     st.session_state.selected_videos = []
     st.session_state.initialized = True
@@ -61,7 +63,7 @@ def main():
         page = st.selectbox(
             "Choose a page:",
             ["Overview", "Video Discovery", "Processing Queue", "Batch Processing", 
-             "Summary Results", "Model Management", "System Status", "Settings"]
+             "Summary Results", "Export Center", "Model Management", "System Status", "Settings"]
         )
     
     # Route to selected page
@@ -75,6 +77,8 @@ def main():
         show_processing_page()
     elif page == "Summary Results":
         show_results_page()
+    elif page == "Export Center":
+        show_export_center_page()
     elif page == "Model Management":
         show_model_management_page()
     elif page == "System Status":
@@ -942,6 +946,206 @@ def show_model_management_page():
                 file_name="model_info.json",
                 mime="application/json"
             )
+
+def show_export_center_page():
+    """Display export center for managing output formats and downloads."""
+    st.header("📤 Export Center")
+    
+    export_manager = st.session_state.export_manager
+    vlc_bookmarks = st.session_state.vlc_bookmarks
+    
+    # Get list of processed videos
+    completed_videos = st.session_state.db.get_videos_by_status('completed')
+    
+    if not completed_videos:
+        st.info("🎬 No completed videos found. Process some videos first to see export options.")
+        return
+    
+    # Video selection
+    st.subheader("Select Video for Export")
+    
+    video_options = {}
+    for video in completed_videos:
+        video_name = Path(video['file_path']).name
+        video_options[f"{video_name} ({video['id']})"] = video['id']
+    
+    selected_display = st.selectbox(
+        "Choose a processed video:",
+        list(video_options.keys()),
+        help="Select a video that has been processed to see export options"
+    )
+    
+    if not selected_display:
+        return
+    
+    selected_video_id = video_options[selected_display]
+    video_details = st.session_state.db.get_video_details(selected_video_id)
+    
+    if not video_details:
+        st.error("❌ Could not load video details")
+        return
+    
+    # Display video information
+    st.subheader("Video Information")
+    
+    col1, col2, col3 = st.columns(3)
+    
+    with col1:
+        st.write(f"**File:** {Path(video_details['file_path']).name}")
+        st.write(f"**Duration:** {video_details.get('duration_seconds', 0)/60:.1f} minutes")
+    
+    with col2:
+        st.write(f"**Processing Status:** {video_details.get('status', 'Unknown')}")
+        st.write(f"**Scenes Detected:** {video_details.get('total_scenes', 0)}")
+    
+    with col3:
+        processing_time = video_details.get('processing_time_seconds', 0)
+        st.write(f"**Processing Time:** {processing_time/60:.1f} minutes")
+        st.write(f"**Validation Score:** {video_details.get('validation_f1', 0):.3f}")
+    
+    # Export options
+    st.subheader("Export Options")
+    
+    col1, col2 = st.columns(2)
+    
+    with col1:
+        st.write("**📄 Standard Exports**")
+        
+        # JSON Summary Export
+        if st.button("📊 Export JSON Summary", key="export_json"):
+            try:
+                with st.spinner("Generating JSON summary..."):
+                    json_path = export_manager.export_summary_json(video_details)
+                    st.success(f"✅ JSON summary exported to: {json_path}")
+                    
+                    # Provide download
+                    with open(json_path, 'r') as f:
+                        st.download_button(
+                            "📥 Download JSON",
+                            data=f.read(),
+                            file_name=Path(json_path).name,
+                            mime="application/json"
+                        )
+            except Exception as e:
+                st.error(f"❌ Export failed: {e}")
+        
+        # Markdown Report Export
+        if st.button("📝 Export Markdown Report", key="export_md"):
+            try:
+                with st.spinner("Generating markdown report..."):
+                    md_path = export_manager.export_summary_report(video_details)
+                    st.success(f"✅ Report exported to: {md_path}")
+                    
+                    with open(md_path, 'r') as f:
+                        st.download_button(
+                            "📥 Download Report",
+                            data=f.read(),
+                            file_name=Path(md_path).name,
+                            mime="text/markdown"
+                        )
+            except Exception as e:
+                st.error(f"❌ Export failed: {e}")
+    
+    with col2:
+        st.write("**🎬 VLC Playlists**")
+        
+        # VLC Bookmarks Export
+        if st.button("🔖 Export VLC Bookmarks", key="export_vlc_bookmarks"):
+            try:
+                with st.spinner("Creating VLC bookmarks..."):
+                    xspf_path = vlc_bookmarks.create_bookmark_playlist(video_details)
+                    st.success(f"✅ VLC bookmarks created: {xspf_path}")
+                    
+                    with open(xspf_path, 'r') as f:
+                        st.download_button(
+                            "📥 Download Bookmarks",
+                            data=f.read(),
+                            file_name=Path(xspf_path).name,
+                            mime="application/xspf+xml"
+                        )
+            except Exception as e:
+                st.error(f"❌ Export failed: {e}")
+        
+        # Chapter Playlist Export
+        if st.button("📚 Export Chapter Playlist", key="export_chapters"):
+            try:
+                with st.spinner("Creating chapter playlist..."):
+                    chapter_path = vlc_bookmarks.create_chapter_playlist(video_details)
+                    st.success(f"✅ Chapter playlist created: {chapter_path}")
+                    
+                    with open(chapter_path, 'r') as f:
+                        st.download_button(
+                            "📥 Download Chapters",
+                            data=f.read(),
+                            file_name=Path(chapter_path).name,
+                            mime="application/xspf+xml"
+                        )
+            except Exception as e:
+                st.error(f"❌ Export failed: {e}")
+    
+    # Bulk export
+    st.subheader("Bulk Export")
+    
+    col1, col2 = st.columns([2, 1])
+    
+    with col1:
+        st.write("**Export all formats at once:**")
+        st.write("- JSON summary with complete analysis")
+        st.write("- Markdown report for human reading")
+        st.write("- VLC bookmarks for key moments")
+        st.write("- Chapter playlist for act structure")
+    
+    with col2:
+        if st.button("📦 Export All Formats", key="export_all"):
+            try:
+                with st.spinner("Generating all export formats..."):
+                    # Create all standard exports
+                    exports = export_manager.export_all_formats(video_details)
+                    
+                    # Add VLC-specific exports
+                    chapter_path = vlc_bookmarks.create_chapter_playlist(video_details)
+                    exports['chapters'] = chapter_path
+                    
+                    st.success("✅ All formats exported successfully!")
+                    
+                    # Show export summary
+                    st.write("**Created files:**")
+                    for format_name, file_path in exports.items():
+                        st.write(f"- **{format_name.title()}**: {Path(file_path).name}")
+                    
+            except Exception as e:
+                st.error(f"❌ Bulk export failed: {e}")
+    
+    # Export history
+    st.subheader("Export History")
+    
+    # Check for existing exports
+    output_dir = Path("output")
+    if output_dir.exists():
+        export_files = []
+        for pattern in ["*.json", "*.md", "*.xspf"]:
+            export_files.extend(output_dir.rglob(pattern))
+        
+        if export_files:
+            st.write(f"**Found {len(export_files)} export files:**")
+            
+            # Create table of exports
+            export_data = []
+            for file_path in sorted(export_files, key=lambda x: x.stat().st_mtime, reverse=True):
+                export_data.append({
+                    'File': file_path.name,
+                    'Type': file_path.suffix[1:].upper(),
+                    'Size': f"{file_path.stat().st_size / 1024:.1f} KB",
+                    'Modified': datetime.fromtimestamp(file_path.stat().st_mtime).strftime("%Y-%m-%d %H:%M")
+                })
+            
+            if export_data:
+                df = pd.DataFrame(export_data)
+                st.dataframe(df, use_container_width=True)
+        else:
+            st.info("📁 No export files found in output directory")
+    else:
+        st.info("📁 Output directory not found")
     
     with col1:
         st.write("**Whisper Model:**")
