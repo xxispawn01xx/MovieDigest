@@ -27,6 +27,9 @@ output/exports/
 *.sqlite3
 video_processing.db
 
+# Force ignore the video processing database
+/video_processing.db
+
 # Processing logs and cache
 *.log
 logs/
