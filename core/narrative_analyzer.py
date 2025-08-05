@@ -17,7 +17,22 @@ try:
     TRANSFORMERS_AVAILABLE = True
 except ImportError:
     TRANSFORMERS_AVAILABLE = False
-    logger.warning("Transformers not available. LLM features will be disabled.")
+    # Create dummy classes to prevent import errors
+    class AutoTokenizer:
+        @staticmethod
+        def from_pretrained(*args, **kwargs):
+            return None
+    
+    class AutoModelForCausalLM:
+        @staticmethod
+        def from_pretrained(*args, **kwargs):
+            return None
+    
+    def pipeline(*args, **kwargs):
+        return None
+    
+    class GenerationConfig:
+        pass
 
 import config
 
@@ -47,6 +62,11 @@ class NarrativeAnalyzer:
         Returns:
             True if model loaded successfully
         """
+        if not TRANSFORMERS_AVAILABLE:
+            logger.warning("Transformers library not available. LLM functionality disabled.")
+            logger.info("To enable LLM features, please install transformers: pip install transformers")
+            return False
+            
         try:
             model_path = model_path or str(config.LLM_MODEL_PATH)
             
@@ -101,9 +121,14 @@ class NarrativeAnalyzer:
         Returns:
             Dictionary containing narrative analysis
         """
+        if not TRANSFORMERS_AVAILABLE:
+            logger.warning("Transformers not available - providing basic structure analysis")
+            return self._basic_narrative_analysis(transcription_data, scenes)
+            
         if not self.model:
             if not self.load_model():
-                raise RuntimeError("Failed to load local LLM for narrative analysis")
+                logger.warning("Failed to load LLM - falling back to basic analysis")
+                return self._basic_narrative_analysis(transcription_data, scenes)
         
         logger.info("Starting narrative structure analysis")
         
@@ -137,7 +162,8 @@ class NarrativeAnalyzer:
             
         except Exception as e:
             logger.error(f"Narrative analysis failed: {e}")
-            raise
+            logger.warning("Falling back to basic analysis")
+            return self._basic_narrative_analysis(transcription_data, scenes)
     
     def _prepare_narrative_context(self, transcription_data: List[Dict], 
                                  scenes: List[Dict]) -> str:
@@ -432,8 +458,85 @@ class NarrativeAnalyzer:
         
         return scenes
     
+    def _basic_narrative_analysis(self, transcription_data: List[Dict], 
+                                scenes: List[Dict]) -> Dict:
+        """
+        Provide basic narrative analysis when transformers is not available.
+        Uses rule-based heuristics instead of LLM analysis.
+        """
+        logger.info("Using basic narrative analysis (no LLM)")
+        
+        total_duration = scenes[-1]['end_time'] if scenes else 0
+        total_scenes = len(scenes)
+        
+        # Basic 5-act structure assignment
+        key_moments = []
+        if total_scenes > 0:
+            act_boundaries = [
+                int(total_scenes * 0.1),   # Act 1 end
+                int(total_scenes * 0.25),  # Act 2a end
+                int(total_scenes * 0.5),   # Act 2b end
+                int(total_scenes * 0.75),  # Act 3 end
+                total_scenes - 1           # Act 4 end
+            ]
+            
+            key_moments = [
+                {
+                    'type': 'opening',
+                    'description': 'Opening sequence',
+                    'scene_number': 1,
+                    'timestamp': scenes[0]['start_time'] if scenes else 0,
+                    'importance': 0.8
+                },
+                {
+                    'type': 'inciting_incident',
+                    'description': 'Inciting incident (estimated)',
+                    'scene_number': act_boundaries[0],
+                    'timestamp': scenes[act_boundaries[0]]['start_time'] if act_boundaries[0] < len(scenes) else 0,
+                    'importance': 0.9
+                },
+                {
+                    'type': 'midpoint',
+                    'description': 'Story midpoint',
+                    'scene_number': act_boundaries[2],
+                    'timestamp': scenes[act_boundaries[2]]['start_time'] if act_boundaries[2] < len(scenes) else 0,
+                    'importance': 0.85
+                },
+                {
+                    'type': 'climax',
+                    'description': 'Climax (estimated)',
+                    'scene_number': act_boundaries[3],
+                    'timestamp': scenes[act_boundaries[3]]['start_time'] if act_boundaries[3] < len(scenes) else 0,
+                    'importance': 1.0
+                }
+            ]
+        
+        return {
+            'structure_analysis': {
+                'act_structure': '5-act structure (estimated)',
+                'pacing': 'Standard narrative pacing',
+                'tone': 'Unable to analyze without LLM',
+                'genre_indicators': []
+            },
+            'key_moments': key_moments,
+            'character_analysis': {
+                'main_characters': [],
+                'character_arcs': [],
+                'themes': ['Basic analysis mode - install transformers for detailed analysis']
+            },
+            'narrative_summary': {
+                'plot_summary': 'Narrative analysis requires transformers library for detailed insights',
+                'structure_notes': f'Movie has {total_scenes} scenes over {total_duration/60:.1f} minutes'
+            },
+            'total_scenes': total_scenes,
+            'total_duration': total_duration
+        }
+
     def get_model_info(self) -> Dict:
         """Get information about the loaded LLM."""
+        if not TRANSFORMERS_AVAILABLE:
+            return {"status": "Transformers library not available"}
+            
         if not self.model:
             return {"status": "No model loaded"}
         
