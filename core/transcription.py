@@ -83,15 +83,25 @@ class OfflineTranscriber:
             # Extract audio from video if needed
             audio_path = self._extract_audio(video_path)
             
-            # Transcribe audio using Whisper
-            result = self.model.transcribe(
-                str(audio_path),
-                language=language or config.WHISPER_LANGUAGE,
-                verbose=True,
-                word_timestamps=True
-            )
+            # Transcribe audio using Whisper with proper encoding
+            try:
+                result = self.model.transcribe(
+                    str(audio_path),
+                    language=language or config.WHISPER_LANGUAGE,
+                    verbose=False,  # Reduce verbose output that might cause encoding issues
+                    word_timestamps=True
+                )
+            except UnicodeEncodeError as ue:
+                logger.warning(f"Unicode encoding issue during transcription: {ue}")
+                # Retry with simplified parameters
+                result = self.model.transcribe(
+                    str(audio_path),
+                    language=language or config.WHISPER_LANGUAGE,
+                    verbose=False,
+                    word_timestamps=False
+                )
             
-            # Process transcription results
+            # Process transcription results with encoding safety
             transcription_data = self._process_whisper_result(result)
             
             # Clean up temporary audio file
@@ -101,6 +111,10 @@ class OfflineTranscriber:
             logger.info(f"Transcription completed: {len(transcription_data)} segments")
             return transcription_data
             
+        except UnicodeEncodeError as ue:
+            error_msg = f"Unicode encoding error for {video_path.name}: Problematic characters in audio/subtitle content"
+            logger.error(error_msg)
+            raise RuntimeError(error_msg) from ue
         except Exception as e:
             logger.error(f"Transcription failed for {video_path}: {e}")
             raise

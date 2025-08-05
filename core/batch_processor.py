@@ -193,6 +193,13 @@ class BatchProcessor:
         """Stop batch processing gracefully."""
         logger.info("Stopping batch processing...")
         self.is_processing = False
+        
+        # Clear any remaining items from queue to prevent app crashes
+        try:
+            while not self.processing_queue.empty():
+                self.processing_queue.get_nowait()
+        except queue.Empty:
+            pass
     
     def _process_batch_worker(self):
         """Worker thread for batch processing."""
@@ -211,8 +218,16 @@ class BatchProcessor:
                 
         except Exception as e:
             logger.error(f"Batch processing worker failed: {e}")
+            # Ensure app doesn't crash on processing errors
+            self.errors.append(f"Batch processing error: {e}")
         finally:
             self.is_processing = False
+            # Clear queue to prevent hanging
+            try:
+                while not self.processing_queue.empty():
+                    self.processing_queue.get_nowait()
+            except queue.Empty:
+                pass
             logger.info("Batch processing completed")
     
     def _get_next_batch(self) -> List[Dict]:
@@ -251,10 +266,14 @@ class BatchProcessor:
                 self.errors.append(error_msg)
                 self.processing_stats['failed'] += 1
                 
-                # Update database with error
+                # Update database with error (encode error message safely)
+                safe_error_msg = str(e).encode('utf-8', errors='replace').decode('utf-8')
                 self.db.update_processing_status(
-                    video_item['video_id'], 'failed', error_message=str(e)
+                    video_item['video_id'], 'failed', error_message=safe_error_msg
                 )
+                
+                # Continue processing other videos instead of crashing
+                logger.info(f"Continuing with next video after error in {video_item['file_path']}")
             
             self.processing_stats['total_processed'] += 1
             
