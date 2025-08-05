@@ -1,73 +1,142 @@
-# Video Summarization Engine - Generated Files and Downloads
+# =============================================================================
+# VIDEO SUMMARIZATION APP - OFFLINE-ONLY GITIGNORE
+# =============================================================================
+# This app is designed for offline operation with local-only data storage
+# All processing files, databases, and media should remain on local machine
 
-# Model directories - Downloaded AI models
-models/whisper/
-models/llm/
-*.bin
-*.pt
-*.pth
-*.safetensors
-*.gguf
-*.onnx
-
-# Temporary processing files
-temp/
-*.tmp
-*.temp
-
-# Output directories - Generated summaries and exports
-output/
-output/bookmarks/
-output/summaries/
-output/exports/
-
-# Database files - Processing data
+# =============================================================================
+# LOCAL DATABASE AND DATA (NEVER SYNC TO REMOTE)
+# =============================================================================
+# Video processing database - contains all local scan results and progress
 *.db
 *.sqlite
 *.sqlite3
 video_processing.db
-
-# Force ignore the video processing database
 /video_processing.db
+database/
 
-# Processing logs and cache
-*.log
-logs/
-cache/
-__pycache__/
-*.pyc
-*.pyo
-*.pyd
+# User configuration and secrets
+.env
+.env.local
+secrets/
 
-# Video files - User content (optional - uncomment if needed)
-# *.mp4
-# *.mkv
-# *.avi
-# *.mov
-# *.wmv
-# *.flv
-# *.webm
+# =============================================================================
+# DOWNLOADED AI MODELS (LARGE FILES - LOCAL ONLY)
+# =============================================================================
+# Whisper models and other AI models are large and should be downloaded locally
+models/
+*.pt
+*.pth
+*.bin
+*.onnx
+*.model
+*.safetensors
+*.gguf
 
-# Subtitle files (optional - uncomment if needed)
-# *.srt
-# *.vtt
-# *.ass
-# *.ssa
+# =============================================================================
+# PROCESSING FILES AND OUTPUTS (LOCAL ONLY)
+# =============================================================================
+# Temporary files during video processing
+temp/
+tmp/
+*.tmp
+*.temp
 
-# Generated thumbnails and previews
+# Generated summaries and analysis results
+output/
+summaries/
+exports/
+bookmarks/
+reports/
+results/
+
+# Scene detection and analysis cache
+scenes/
+frames/
+analysis/
+
+# =============================================================================
+# MEDIA FILES (LOCAL ONLY - NEVER SYNC PERSONAL VIDEOS)
+# =============================================================================
+# Video files
+*.mp4
+*.mkv
+*.avi
+*.mov
+*.wmv
+*.flv
+*.webm
+*.m4v
+*.mpg
+*.mpeg
+
+# Audio files
+*.mp3
+*.wav
+*.aac
+*.flac
+*.ogg
+*.m4a
+
+# Subtitle files
+*.srt
+*.vtt
+*.ass
+*.ssa
+*.sub
+
+# Generated media
 thumbnails/
 previews/
+clips/
 *.jpg
 *.jpeg
 *.png
 *.bmp
 *.gif
+*.webp
 
-# System files
-.DS_Store
-Thumbs.db
-desktop.ini
+# =============================================================================
+# PYTHON STANDARD IGNORES
+# =============================================================================
+# Byte-compiled / optimized / DLL files
+__pycache__/
+*.py[cod]
+*$py.class
 
+# C extensions
+*.so
+
+# Distribution / packaging
+.Python
+build/
+develop-eggs/
+dist/
+downloads/
+eggs/
+.eggs/
+lib/
+lib64/
+parts/
+sdist/
+var/
+wheels/
+share/python-wheels/
+*.egg-info/
+.installed.cfg
+*.egg
+MANIFEST
+
+# Virtual environments
+.venv/
+venv/
+ENV/
+env/
+.env/
+
+# =============================================================================
+# DEVELOPMENT AND SYSTEM FILES
+# =============================================================================
 # IDE and editor files
 .vscode/
 .idea/
@@ -75,42 +144,46 @@ desktop.ini
 *.swo
 *~
 
-# Virtual environments
-venv/
-env/
-.env
-.venv
+# Streamlit cache and config
+.streamlit/
+streamlit_cache/
 
-# Python package files
-dist/
-build/
-*.egg-info/
+# Log files
+logs/
+*.log
 
-# Configuration files with sensitive data
-config_local.py
-secrets.env
+# OS generated files
+.DS_Store
+.DS_Store?
+._*
+.Spotlight-V100
+.Trashes
+ehthumbs.db
+Thumbs.db
 
-# GPU computation cache
-.nv/
-.cuda/
+# Cache directories
+.cache/
+cache/
 
-# FFmpeg temp files
-ffmpeg_*.txt
-ffprobe_*.txt
+# Testing and coverage
+.pytest_cache/
+.coverage
+htmlcov/
+.tox/
 
-# Backup files
-*.bak
-*.backup
-*.old
+# =============================================================================
+# REPLIT SPECIFIC
+# =============================================================================
+# Replit configuration (keep in repo)
+# .replit - KEEP THIS FILE
+# replit.nix - KEEP THIS FILE IF PRESENT
 
-# Large temporary data files
-*.npy
-*.npz
-*.h5
-*.hdf5
-
-# Export formats
-*.json.backup
-*.csv.backup
-*.xml.backup
-video_processing.db
+# =============================================================================
+# WHAT SHOULD BE SYNCED TO REMOTE:
+# =============================================================================
+# ✓ Source code (.py files)
+# ✓ Configuration files (config.py, .replit)
+# ✓ Documentation (README.md, replit.md)
+# ✓ Requirements (pyproject.toml, uv.lock)
+# ✓ Example/demo files (if small)
+# ✗ Database files, models, processing outputs, media files
