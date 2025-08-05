@@ -120,6 +120,8 @@ utils/
 
 5. **Access the Web Interface**
    Open your browser to: `http://localhost:5000`
+   
+   **Note**: In containerized environments like Replit, the server binds to `0.0.0.0:5000` internally but is accessible via the platform's URL system.
 
 ## Usage Guide
 
@@ -208,6 +210,9 @@ TEMP_DIR = Path("temp")
 headless = true
 address = "0.0.0.0"
 port = 5000
+
+# Note: 0.0.0.0 is required for containerized environments
+# It binds to all network interfaces, allowing external access
 
 [theme]
 base = "dark"
