@@ -444,7 +444,9 @@ def show_processing_page():
         st.metric("Status", f"{status_color} {'Active' if processing_status['is_processing'] else 'Idle'}")
     
     with col2:
-        st.metric("Queue Size", processing_status['queue_size'])
+        # Show actual queued videos count from database
+        queued_count = len(st.session_state.db.get_videos_by_status('queued'))
+        st.metric("Queue Size", f"{queued_count} queued")
     
     with col3:
         st.metric("Batch Size", processing_status['current_batch_size'])
@@ -493,6 +495,31 @@ def show_processing_page():
     with col3:
         if st.button("🔄 Refresh Status", use_container_width=True):
             st.rerun()
+    
+    # Show queued videos from database
+    st.subheader("Queued Videos")
+    queued_videos = st.session_state.db.get_videos_by_status('queued')
+    
+    if queued_videos:
+        st.info(f"Found {len(queued_videos)} videos queued for processing")
+        
+        queued_df = pd.DataFrame([
+            {
+                'Filename': Path(video['file_path']).name,
+                'Size (MB)': f"{(video.get('file_size') or 0) / (1024*1024):.1f}",
+                'Duration (min)': f"{(video.get('duration_seconds') or 0) / 60:.1f}",
+                'Status': video.get('status', 'Unknown').title(),
+                'Added': video.get('discovered_at', 'Unknown')
+            }
+            for video in queued_videos[:10]  # Show first 10
+        ])
+        
+        st.dataframe(queued_df, use_container_width=True)
+        
+        if len(queued_videos) > 10:
+            st.info(f"Showing first 10 of {len(queued_videos)} queued videos")
+    else:
+        st.warning("No videos in queue. Add videos from the Video Discovery page first!")
     
     # Progress visualization
     if processing_status['is_processing'] or stats['total_processed'] > 0:
