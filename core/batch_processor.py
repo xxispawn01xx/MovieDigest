@@ -20,6 +20,8 @@ from .narrative_analyzer import NarrativeAnalyzer
 from .summarizer import VideoSummarizer
 from .validation import ValidationMetrics
 from .vlc_bookmarks import VLCBookmarkGenerator
+from .advanced_scene_analysis import AdvancedSceneAnalyzer
+from .audio_analysis import AudioAnalyzer
 
 import config
 
@@ -39,6 +41,8 @@ class BatchProcessor:
         self.summarizer = VideoSummarizer()
         self.validator = ValidationMetrics()
         self.bookmark_generator = VLCBookmarkGenerator()
+        self.advanced_scene_analyzer = AdvancedSceneAnalyzer()
+        self.audio_analyzer = AudioAnalyzer()
         
         # Processing queue and state
         self.processing_queue = queue.Queue()

@@ -64,7 +64,7 @@ def main():
         st.header("Navigation")
         page = st.selectbox(
             "Choose a page:",
-            ["Overview", "Video Discovery", "Plex Integration", "Processing Queue", "Batch Processing", 
+            ["Overview", "Video Discovery", "Plex Integration", "Advanced Analysis", "Processing Queue", "Batch Processing", 
              "Summary Results", "Export Center", "Model Management", "System Status", "Settings"]
         )
     
@@ -75,6 +75,8 @@ def main():
         show_discovery_page()
     elif page == "Plex Integration":
         show_plex_integration_page()
+    elif page == "Advanced Analysis":
+        show_advanced_analysis_page()
     elif page == "Processing Queue":
         show_queue_page()
     elif page == "Batch Processing":
