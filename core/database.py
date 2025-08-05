@@ -291,13 +291,18 @@ class VideoDatabase:
             
             # Insert new transcription data
             for trans in transcriptions:
+                # Ensure text is properly encoded
+                text = trans['text']
+                if isinstance(text, str):
+                    text = text.encode('utf-8', errors='replace').decode('utf-8')
+                
                 cursor.execute("""
                     INSERT INTO transcriptions 
                     (video_id, start_time, end_time, text, confidence, speaker_id)
                     VALUES (?, ?, ?, ?, ?, ?)
                 """, (
                     video_id,
-                    trans['start_time'], trans['end_time'], trans['text'],
+                    trans['start_time'], trans['end_time'], text,
                     trans.get('confidence'), trans.get('speaker_id')
                 ))
     

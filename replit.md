@@ -9,6 +9,11 @@ Preferred communication style: Simple, everyday language.
 # Recent Changes
 
 ## Latest Updates (Aug 5, 2025)
+- **Recent Folders Feature**: Fully implemented recent folder tracking with database integration, UI buttons for quick access, and automatic directory tracking
+- **Encoding Fix**: Resolved Unicode/character encoding issues in transcription that caused processing failures on Windows systems
+- **GitIgnore Enhancement**: Created comprehensive offline-only gitignore structure to keep video databases local while syncing code to remote
+- **Database Integration**: Recent folders feature automatically tracks scanned directories with video count, scan duration, and metadata
+- **UI Polish**: Recent folders display with quick access buttons, expandable sections, and remove functionality
 - **Enhanced Export System**: Added comprehensive Export Manager with JSON, VLC bookmarks, and markdown report generation
 - **Model Management**: Built intelligent Model Downloader with Whisper model recommendations and automated downloads
 - **UI Improvements**: Created Model Management page with system requirements checking and download interface
@@ -18,12 +23,10 @@ Preferred communication style: Simple, everyday language.
 - **Audio Analysis**: Built comprehensive audio feature extraction including speech detection and music analysis
 - **Smart Summarization**: Implemented multi-algorithm summarization engine with hybrid, narrative, and importance-based methods
 - **Documentation**: Created comprehensive README.md with architecture overview, installation guide, and usage instructions
-- **Git Integration**: Added comprehensive .gitignore file for all generated files, models, and output directories
 - **Processing Queue Fix**: Resolved issue where "Add to Queue" button didn't start processing by connecting database status with internal queue  
 - **Batch Page Enhancement**: Added queued videos display to show database content on processing page
 - **Configuration System**: Added environment variables to control auto-downloads, database init, and offline mode
 - **Development Mode**: Added visual indicators when development flags are active
-- **Error Handling**: Fixed all LSP diagnostics and improved robustness throughout the codebase
 - **Fallback Mode**: Ensured app works without transformers library using intelligent fallback analysis
 
 # System Architecture

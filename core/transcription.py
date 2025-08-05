@@ -133,6 +133,8 @@ class OfflineTranscriber:
                 cmd,
                 capture_output=True,
                 text=True,
+                encoding='utf-8',
+                errors='replace',
                 timeout=300  # 5 minute timeout
             )
             
@@ -155,10 +157,15 @@ class OfflineTranscriber:
         
         # Process segments
         for segment in result.get('segments', []):
+            # Clean and encode text properly
+            text = segment['text'].strip()
+            # Replace problematic characters that can't be encoded
+            text = text.encode('utf-8', errors='replace').decode('utf-8')
+            
             segment_data = {
                 'start_time': segment['start'],
                 'end_time': segment['end'],
-                'text': segment['text'].strip(),
+                'text': text,
                 'confidence': segment.get('avg_logprob', 0.0),
                 'segment_id': segment['id']
             }
@@ -167,7 +174,7 @@ class OfflineTranscriber:
             if 'words' in segment:
                 segment_data['words'] = [
                     {
-                        'word': word['word'],
+                        'word': word['word'].encode('utf-8', errors='replace').decode('utf-8'),
                         'start': word['start'],
                         'end': word['end'],
                         'probability': word.get('probability', 0.0)
@@ -250,7 +257,7 @@ class OfflineTranscriber:
                 str(video_path)
             ]
             
-            result = subprocess.run(cmd, capture_output=True, text=True, timeout=30)
+            result = subprocess.run(cmd, capture_output=True, text=True, encoding='utf-8', errors='replace', timeout=30)
             
             if result.returncode == 0:
                 return float(result.stdout.strip())

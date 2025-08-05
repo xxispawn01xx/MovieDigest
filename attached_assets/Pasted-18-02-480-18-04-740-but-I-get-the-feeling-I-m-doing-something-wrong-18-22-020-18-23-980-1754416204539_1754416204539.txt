@@ -1,0 +1,31 @@
+18:02.480 --> 18:04.740]  but I get the feeling I'm doing something wrong.
+[18:22.020 --> 18:23.980]  My father, John.
+[18:25.540 --> 18:26.480]  I'm very sorry.
+[18:41.380 --> 18:44.200]  I hope when you read this, it kindles your heart,
+[18:44.700 --> 18:46.240]  and puts a smile on your face.
+[18:47.180 --> 18:48.960]  Papa, I'm so proud of you,
+[18:49.280 --> 18:51.260]  and I think about you every moment,
+[18:51.260 --> 18:53.140]  and I love you forever.
+[18:54.240 --> 18:55.200]  You're a Sarah.
+[19:07.020 --> 19:08.660]  No, no, no, no, no.
+[19:08.860 --> 19:10.240]  You mustn't get so upset.
+[19:10.780 --> 19:11.660]  Lime? Pressure?
+[19:12.160 --> 19:14.380]  Oh, please, Lime is here.
+[19:14.780 --> 19:15.820]  Please stop screaming.C:\Program Files\Python312\Lib\site-packages\whisper\timing.py:42: UserWarning:
+
+Failed to launch Triton kernels, likely due to missing CUDA toolkit; falling back to a slower median kernel implementation...
+
+C:\Program Files\Python312\Lib\site-packages\whisper\timing.py:146: UserWarning:
+
+Failed to launch Triton kernels, likely due to missing CUDA toolkit; falling back to a slower DTW implementation...
+
+ERROR:core.transcription:Transcription failed for H:\Movies\A little princess.avi: 'charmap' codec can't encode characters in position 67-70: character maps to <undefined>
+ERROR:core.batch_processor:Video processing failed: H:\Movies\A little princess.avi: 'charmap' codec can't encode characters in position 67-70: character maps to <undefined>
+2025-08-05 13:49:32.239 Thread 'Thread-552 (_process_batch_worker)': missing ScriptRunContext! This warning can be ignored when running in bare mode.
+2025-08-05 13:49:32.240 Thread 'Thread-552 (_process_batch_worker)': missing ScriptRunContext! This warning can be ignored when running in bare mode.
+INFO:core.batch_processor:Processing batch of 2 videos
+INFO:core.batch_processor:Processing video: Akira Kurosawa - Seven Samurai.avi
+2025-08-05 13:49:32.505 Thread 'Thread-552 (_process_batch_worker)': missing ScriptRunContext! This warning can be ignored when running in bare mode.
+2025-08-05 13:49:32.505 Thread 'Thread-552 (_process_batch_worker)': missing ScriptRunContext! This warning can be ignored when running in bare mode.
+INFO:core.scene_detector:Starting scene detection for: Akira Kurosawa - Seven Samurai.avi
+INFO:core.scene_detector:Using method: auto
