@@ -293,35 +293,80 @@ class VideoSummarizer:
             input_args.extend(['-ss', str(start_time), '-t', str(duration), '-i', str(video_path)])
             filter_parts.append(f"[{i}:v][{i}:a]")
         
-        # Build ffmpeg command
-        cmd = ['ffmpeg'] + input_args + [
-            '-filter_complex',
-            f"{''.join(filter_parts)}concat=n={len(selected_scenes)}:v=1:a=1[outv][outa]",
-            '-map', '[outv]',
-            '-map', '[outa]',
-            '-c:v', 'libx264',
-            '-c:a', 'aac',
-            '-y',  # Overwrite output
-            str(summary_path)
-        ]
+        # Build ffmpeg command - simpler approach for better compatibility
+        if len(selected_scenes) == 0:
+            logger.warning("No scenes selected for summary")
+            return None
+        
+        # Create a simple concatenation using individual clips
+        cmd = ['ffmpeg']
+        
+        # Add input files for each scene
+        for scene in selected_scenes:
+            cmd.extend([
+                '-ss', str(scene['start_time']),
+                '-t', str(scene['duration']),
+                '-i', str(video_path)
+            ])
+        
+        # Simple concat filter
+        if len(selected_scenes) == 1:
+            # Single scene - no concatenation needed
+            cmd.extend([
+                '-c:v', 'libx264',
+                '-c:a', 'aac',
+                '-avoid_negative_ts', 'make_zero',
+                '-y',
+                str(summary_path)
+            ])
+        else:
+            # Multiple scenes - concatenate
+            filter_str = ''.join([f'[{i}:v][{i}:a]' for i in range(len(selected_scenes))])
+            filter_str += f'concat=n={len(selected_scenes)}:v=1:a=1[outv][outa]'
+            
+            cmd.extend([
+                '-filter_complex', filter_str,
+                '-map', '[outv]',
+                '-map', '[outa]',
+                '-c:v', 'libx264',
+                '-c:a', 'aac',
+                '-avoid_negative_ts', 'make_zero',
+                '-y',
+                str(summary_path)
+            ])
         
         try:
+            logger.info(f"Running FFmpeg command: {' '.join(cmd[:10])}... (truncated)")
             result = subprocess.run(
                 cmd,
                 capture_output=True,
                 text=True,
+                encoding='utf-8',
+                errors='replace',
                 timeout=3600  # 1 hour timeout
             )
             
             if result.returncode != 0:
-                raise RuntimeError(f"FFmpeg failed: {result.stderr}")
+                logger.error(f"FFmpeg stderr: {result.stderr}")
+                logger.error(f"FFmpeg stdout: {result.stdout}")
+                raise RuntimeError(f"FFmpeg failed with code {result.returncode}: {result.stderr}")
             
-            logger.info(f"Video summary created: {summary_path}")
+            if summary_path.exists():
+                logger.info(f"Video summary created successfully: {summary_path} ({summary_path.stat().st_size} bytes)")
+            else:
+                logger.error(f"Summary file was not created: {summary_path}")
+                raise RuntimeError("Summary file was not created by FFmpeg")
+                
             return summary_path
             
         except subprocess.TimeoutExpired:
+            logger.error("Video summary creation timed out")
             raise RuntimeError("Video summary creation timed out")
+        except FileNotFoundError:
+            logger.error("FFmpeg not found - please ensure FFmpeg is installed")
+            raise RuntimeError("FFmpeg not found - please ensure FFmpeg is installed")
         except Exception as e:
+            logger.error(f"Video summary creation failed: {e}")
             raise RuntimeError(f"Video summary creation failed: {e}")
     
     def _create_vlc_bookmarks(self, video_path: Path, selected_scenes: List[Dict],
