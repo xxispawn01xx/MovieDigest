@@ -1,0 +1,70 @@
+
+INFO:core.video_discovery:Extracted metadata for: XTV-23.avi
+INFO:core.video_discovery:Extracted metadata for: x-men_-_4x01_-_one_man's_worth_-_part_1_[vpc].avi
+INFO:core.video_discovery:Extracted metadata for: x-men_-_4x02_-_one_man's_worth_-_part_2_[vpc].avi
+INFO:core.video_discovery:Extracted metadata for: x-men_-_4x03_-_courage_[vpc].avi
+INFO:core.video_discovery:Extracted metadata for: x-men_-_4x04_-_proteus_-_part_1_[vpc].avi
+INFO:core.video_discovery:Extracted metadata for: x-men_-_4x05_-_proteus_-_part_2_[vpc].avi
+INFO:core.video_discovery:Extracted metadata for: x-men_-_4x06_-_sanctuary_-_part_1_[vpc].avi
+INFO:core.video_discovery:Extracted metadata for: x-men_-_4x07_-_sanctuary_-_part_2_[vpc].avi
+INFO:core.video_discovery:Extracted metadata for: x-men_-_4x08_-_beyond_good_and_evil_-_part_1_[vpc].avi
+INFO:core.video_discovery:Extracted metadata for: x-men_-_4x09_-_beyond_good_and_evil_-_part_2_[vpc].avi
+INFO:core.video_discovery:Extracted metadata for: x-men_-_4x10_-_beyond_good_and_evil_-_part_3_[vpc].avi
+INFO:core.video_discovery:Extracted metadata for: x-men_-_4x11_-_beyond_good_and_evil_-_part_4_[vpc].avi
+INFO:core.video_discovery:Extracted metadata for: x-men_-_4x12_-_have_yourself_a_morlock_little_christmas_[vpc].avi
+INFO:core.video_discovery:Extracted metadata for: x-men_-_4x13_-_the_lotus_and_the_steel_[vpc].avi
+INFO:core.video_discovery:Extracted metadata for: x-men_-_4x14_-_love_in_vain_[vpc].avi
+INFO:core.video_discovery:Extracted metadata for: x-men_-_4x15_-_secrets,_not_long_buried_[vpc].avi
+INFO:core.video_discovery:Extracted metadata for: x-men_-_4x16_-_xavier_remembers_[vpc].avi
+INFO:core.video_discovery:Extracted metadata for: x-men_-_4x17_-_family_ties_[vpc].avi
+INFO:core.video_discovery:Extracted metadata for: 01-Tragedy In The Hidden Village.avi
+INFO:core.video_discovery:Extracted metadata for: 02-Departure.avi
+INFO:core.video_discovery:Extracted metadata for: 03-Forbidden Love.avi
+INFO:core.video_discovery:Extracted metadata for: 04-Broken Stone.avi
+INFO:core.video_discovery:Extracted metadata for: 05-The Diamond Child.avi
+INFO:core.video_discovery:Extracted metadata for: 06-Shelter From The Rain.avi
+INFO:core.video_discovery:Extracted metadata for: 07-Blossom.avi
+INFO:core.video_discovery:Extracted metadata for: 08-The Fate Of Rengoku.avi
+INFO:core.video_discovery:Extracted metadata for: 09-A Dragon Within.avi
+INFO:core.video_discovery:Extracted metadata for: 10-The Heart Of The Hiruko.avi
+INFO:core.video_discovery:Extracted metadata for: 11-Yagyu Renya.avi
+INFO:core.video_discovery:Extracted metadata for: 12-Dynasty Restoration.avi
+INFO:core.video_discovery:Extracted metadata for: 13-Farewell Jubei.avi
+INFO:core.video_discovery:Extracted metadata for: Back To The Future 1985 BRRip 720p DTS x264-MarGe.mkv
+INFO:core.video_discovery:Extracted metadata for: Back To The Future Part III 1990 BRRip 720p DTS x264-MarGe.mkv
+INFO:core.video_discovery:Extracted metadata for: Bajirao Mastani (2015) mHD 720p BluRay HVEC Rip x265 5.1Ch AAC ESubs - Marhaba.mkv
+INFO:core.video_discovery:Extracted metadata for: Devdas (2002) 1080p WEBHD x264 AAC MSubs [DDR].mkv
+INFO:core.video_discovery:Extracted metadata for: [BluRay] Kal Ho Naa Ho (2003) 720p [DTS] x264 Chapters [Team TC].mkv
+INFO:core.video_discovery:Extracted metadata for: I.Am.Sam.cd1.DVDRip.XViD.AC3.iNTERNAL-FFM.avi
+INFO:core.video_discovery:Extracted metadata for: I.Am.Sam.cd2.DVDRip.XViD.AC3.iNTERNAL-FFM.avi
+INFO:core.video_discovery:Extracted metadata for: THE GODFATHER - PART 2 - DISK 2.avi
+INFO:core.video_discovery:Extracted metadata for: THE GODFATHER - PART2 - DISC 1.avi
+INFO:core.video_discovery:Extracted metadata for: 7sins-the-devils-backbone-720p-bluray.mkv
+INFO:core.video_discovery:Extracted metadata for: the.dead.zone1-porphyria.avi
+INFO:core.video_discovery:Extracted metadata for: the.dead.zone2-porphyria.avi
+INFO:core.video_discovery:Extracted metadata for: gua-stephenkings.it.1990-720p-rp.mkv
+INFO:core.video_discovery:Extracted metadata for: Tales.From.The.Hood.1995.DVDRip.x264-NoRBiT.mkv
+INFO:core.video_discovery:Extracted metadata for: Confessions 2010 720p BRRip AC3 x264 MacGuffin.mkv
+INFO:core.video_discovery:Extracted metadata for: exvid-istd-cd1.avi
+INFO:core.video_discovery:Extracted metadata for: exvid-istd-cd2.avi
+INFO:core.video_discovery:Extracted metadata for: Noroi.2005.DVDRip.XviD.CD1-AXiNE.avi
+INFO:core.video_discovery:Extracted metadata for: Noroi.2005.DVDRip.XviD.CD2-AXiNE.avi
+INFO:core.video_discovery:Extracted metadata for: ssf-tchaser-cd1.avi
+INFO:core.video_discovery:Extracted metadata for: ssf-tchaser-cd2.avi
+INFO:core.video_discovery:Extracted metadata for: The.Eye.2002.ENGSUB.DVDRip.XviD.INTERNAL-FiLMCLUB.avi
+INFO:core.video_discovery:Extracted metadata for: Rush.Hour.1998.1080p.BluRay.x264-nikt0.mkv
+INFO:core.video_discovery:Extracted metadata for: Rush.Hour.2.2001.1080p.BluRay.x264-nikt0.mkv
+INFO:core.video_discovery:Extracted metadata for: Rush.Hour.3.2007.1080p.BluRay.x264-nikt0.mkv
+INFO:core.batch_processor:Scan completed: {'discovered': 268, 'new': 268, 'already_processed': 0, 'queued': 268, 'errors': []}
+INFO:core.model_downloader:Downloading Whisper model: large-v3
+100%|#####################################| 2.88G/2.88G [01:42<00:00, 30.0MiB/s]
+INFO:core.model_downloader:Whisper model 'large-v3' downloaded successfully
+INFO:core.transcription:Transcriber initialized on device: cuda
+INFO:core.narrative_analyzer:Narrative analyzer initialized on device: cuda
+INFO:utils.gpu_manager:GPU Manager initialized - CUDA available: True
+INFO:utils.gpu_manager:Primary device: cuda
+INFO:utils.gpu_manager:Available GPUs: 1
+INFO:utils.progress_tracker:Progress tracker update thread started
+WARNING:core.batch_processor:No videos in processing queue
+INFO:core.batch_processor:Batch size set to: 2
+
