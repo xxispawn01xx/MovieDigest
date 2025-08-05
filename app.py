@@ -321,7 +321,7 @@ def show_discovery_page():
                 if st.button("📝 Add to Queue", use_container_width=True):
                     # Update video status to queued
                     for video_id in st.session_state.selected_videos:
-                        st.session_state.db.update_video_status(video_id, 'queued')
+                        st.session_state.db.update_processing_status(video_id, 'queued')
                     st.success(f"Added {len(st.session_state.selected_videos)} videos to processing queue")
                     st.rerun()
             
