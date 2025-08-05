@@ -200,6 +200,19 @@ class VideoDatabase:
         """Update the status of a video (alias for update_processing_status)."""
         self.update_processing_status(video_id, status)
     
+    def clear_all_queued_videos(self):
+        """Clear all videos from the queue (set status back to discovered)."""
+        with sqlite3.connect(self.db_path) as conn:
+            cursor = conn.cursor()
+            cursor.execute("""
+                UPDATE processing_status 
+                SET status = 'discovered', progress_percent = 0, current_stage = NULL
+                WHERE status = 'queued'
+            """)
+            affected_rows = cursor.rowcount
+            logger.info(f"Cleared {affected_rows} videos from queue")
+            return affected_rows
+    
     def add_scene_data(self, video_id: int, scenes: List[Dict]):
         """Add scene detection data for a video."""
         with sqlite3.connect(self.db_path) as conn:

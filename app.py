@@ -511,7 +511,16 @@ def show_processing_page():
     queued_videos = st.session_state.db.get_videos_by_status('queued')
     
     if queued_videos:
-        st.info(f"Found {len(queued_videos)} videos queued for processing")
+        col1, col2 = st.columns([2, 1])
+        
+        with col1:
+            st.info(f"Found {len(queued_videos)} videos queued for processing")
+        
+        with col2:
+            if st.button("🗑️ Clear All Queued", type="secondary", use_container_width=True):
+                cleared_count = st.session_state.db.clear_all_queued_videos()
+                st.success(f"Cleared {cleared_count} videos from queue")
+                st.rerun()
         
         queued_df = pd.DataFrame([
             {
