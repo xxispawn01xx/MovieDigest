@@ -4,10 +4,13 @@ Maintains processing status, metadata, and validation scores.
 """
 import sqlite3
 import json
+import logging
 from datetime import datetime
 from pathlib import Path
 from typing import Dict, List, Optional, Tuple
 import config
+
+logger = logging.getLogger(__name__)
 
 class VideoDatabase:
     """Database manager for video processing state and metadata."""
@@ -19,6 +22,10 @@ class VideoDatabase:
     
     def init_database(self):
         """Create database tables if they don't exist."""
+        if config.DISABLE_DATABASE_INIT:
+            logger.info("Database initialization disabled")
+            return
+            
         with sqlite3.connect(self.db_path) as conn:
             conn.executescript("""
                 CREATE TABLE IF NOT EXISTS videos (

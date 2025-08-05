@@ -38,6 +38,16 @@ st.set_page_config(
     initial_sidebar_state="expanded"
 )
 
+# Display configuration status if development flags are set
+if config.DISABLE_AUTO_DOWNLOADS or config.DISABLE_DATABASE_INIT or config.OFFLINE_MODE:
+    st.sidebar.warning("⚙️ Development Mode Active")
+    if config.DISABLE_AUTO_DOWNLOADS:
+        st.sidebar.info("🚫 Auto-downloads disabled")
+    if config.DISABLE_DATABASE_INIT:
+        st.sidebar.info("🚫 Database init disabled")  
+    if config.OFFLINE_MODE:
+        st.sidebar.info("📴 Offline mode enabled")
+
 # Initialize session state
 if 'initialized' not in st.session_state:
     st.session_state.initialized = False

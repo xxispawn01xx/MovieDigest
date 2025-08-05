@@ -53,6 +53,11 @@ DEFAULT_BATCH_SIZE = 2
 MAX_BATCH_SIZE = 5
 PROCESSING_TIMEOUT_HOURS = 6
 
+# Development/Testing Configuration
+DISABLE_AUTO_DOWNLOADS = os.getenv('DISABLE_AUTO_DOWNLOADS', 'false').lower() == 'true'
+DISABLE_DATABASE_INIT = os.getenv('DISABLE_DATABASE_INIT', 'false').lower() == 'true'
+OFFLINE_MODE = os.getenv('OFFLINE_MODE', 'false').lower() == 'true'
+
 # Create necessary directories
 for directory in [MODELS_DIR, OUTPUT_DIR, TEMP_DIR]:
     directory.mkdir(exist_ok=True)

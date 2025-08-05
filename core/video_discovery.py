@@ -35,18 +35,18 @@ class VideoDiscovery:
         Yields:
             Dict containing video metadata
         """
-        root_path = Path(root_path)
+        root_dir = Path(root_path)
         
-        if not root_path.exists():
-            logger.error(f"Directory does not exist: {root_path}")
+        if not root_dir.exists():
+            logger.error(f"Directory does not exist: {root_dir}")
             return
         
-        logger.info(f"Scanning directory: {root_path}")
+        logger.info(f"Scanning directory: {root_dir}")
         
         # Find all video files
         pattern = "**/*" if include_subdirs else "*"
         
-        for file_path in root_path.glob(pattern):
+        for file_path in root_dir.glob(pattern):
             if file_path.is_file() and file_path.suffix.lower() in self.supported_formats:
                 try:
                     metadata = self.extract_metadata(file_path)

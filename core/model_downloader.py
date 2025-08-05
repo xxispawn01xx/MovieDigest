@@ -8,6 +8,7 @@ from pathlib import Path
 from typing import List, Dict, Optional
 import logging
 import json
+import config
 
 logger = logging.getLogger(__name__)
 
@@ -65,6 +66,10 @@ class ModelDownloader:
         Returns:
             True if download successful
         """
+        if config.DISABLE_AUTO_DOWNLOADS or config.OFFLINE_MODE:
+            logger.info(f"Auto-downloads disabled, skipping {model_name}")
+            return False
+            
         if model_name not in self.whisper_models:
             logger.error(f"Unknown Whisper model: {model_name}")
             return False

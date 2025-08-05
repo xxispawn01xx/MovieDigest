@@ -19,7 +19,10 @@ Preferred communication style: Simple, everyday language.
 - **Smart Summarization**: Implemented multi-algorithm summarization engine with hybrid, narrative, and importance-based methods
 - **Documentation**: Created comprehensive README.md with architecture overview, installation guide, and usage instructions
 - **Git Integration**: Added comprehensive .gitignore file for all generated files, models, and output directories
-- **Processing Queue Fix**: Resolved issue where "Add to Queue" button didn't start processing by connecting database status with internal queue
+- **Processing Queue Fix**: Resolved issue where "Add to Queue" button didn't start processing by connecting database status with internal queue  
+- **Batch Page Enhancement**: Added queued videos display to show database content on processing page
+- **Configuration System**: Added environment variables to control auto-downloads, database init, and offline mode
+- **Development Mode**: Added visual indicators when development flags are active
 - **Error Handling**: Fixed all LSP diagnostics and improved robustness throughout the codebase
 - **Fallback Mode**: Ensured app works without transformers library using intelligent fallback analysis
 
