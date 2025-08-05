@@ -55,6 +55,18 @@ if 'initialized' not in st.session_state:
     st.session_state.selected_videos = []
     st.session_state.initialized = True
 
+def update_progress_callback(progress_data):
+    """Callback for processing progress updates."""
+    if 'progress_data' not in st.session_state:
+        st.session_state.progress_data = {}
+    st.session_state.progress_data.update(progress_data)
+
+def update_status_callback(status_data):
+    """Callback for processing status updates."""
+    if 'status_data' not in st.session_state:
+        st.session_state.status_data = {}
+    st.session_state.status_data.update(status_data)
+
 def main():
     """Main application entry point."""
     st.title("🎬 Video Summarization Engine")
@@ -297,8 +309,11 @@ def show_discovery_page():
             
             with col1:
                 if st.button("📝 Add to Queue", use_container_width=True):
-                    # Selected videos are already in the database
+                    # Update video status to queued
+                    for video_id in st.session_state.selected_videos:
+                        st.session_state.db.update_video_status(video_id, 'queued')
                     st.success(f"Added {len(st.session_state.selected_videos)} videos to processing queue")
+                    st.rerun()
             
             with col2:
                 if st.button("🗑️ Remove Selected", use_container_width=True):
@@ -464,10 +479,11 @@ def show_processing_page():
                 st.rerun()
     
     with col2:
+        max_batch_size = min(processing_status['current_batch_size'] + 2, 5)  # Allow up to 5 or current+2
         batch_size = st.selectbox(
             "Batch Size",
-            options=list(range(1, processing_status['current_batch_size'] + 1)),
-            index=processing_status['current_batch_size'] - 1
+            options=list(range(1, max_batch_size + 1)),
+            index=min(processing_status['current_batch_size'] - 1, max_batch_size - 1)
         )
         
         if st.button("Update Batch Size", use_container_width=True):

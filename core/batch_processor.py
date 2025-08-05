@@ -144,6 +144,9 @@ class BatchProcessor:
             logger.warning("Batch processing already in progress")
             return False
         
+        # Load queued videos from database into processing queue
+        self._load_queued_videos()
+        
         if self.processing_queue.empty():
             logger.warning("No videos in processing queue")
             return False
@@ -170,6 +173,21 @@ class BatchProcessor:
         
         logger.info(f"Batch processing started with batch size: {self.current_batch_size}")
         return True
+    
+    def _load_queued_videos(self):
+        """Load videos with 'queued' status from database into processing queue."""
+        queued_videos = self.db.get_videos_by_status('queued')
+        
+        for video in queued_videos:
+            # Add to processing queue if not already there
+            video_item = {
+                'video_id': video['id'],
+                'file_path': video['file_path'],
+                'metadata': video
+            }
+            self.processing_queue.put(video_item)
+            
+        logger.info(f"Loaded {len(queued_videos)} queued videos into processing queue")
     
     def stop_batch_processing(self):
         """Stop batch processing gracefully."""
