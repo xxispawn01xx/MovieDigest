@@ -20,6 +20,7 @@ from core.validation import ValidationMetrics
 from core.export_manager import ExportManager
 from core.model_downloader import ModelDownloader
 from core.vlc_bookmarks import VLCBookmarkGenerator
+from core.plex_integration import PlexIntegration
 from utils.gpu_manager import GPUManager
 from utils.progress_tracker import ProgressTracker
 import config
@@ -48,6 +49,7 @@ if 'initialized' not in st.session_state:
     st.session_state.export_manager = ExportManager()
     st.session_state.model_downloader = ModelDownloader()
     st.session_state.vlc_bookmarks = VLCBookmarkGenerator()
+    st.session_state.plex_integration = PlexIntegration()
     st.session_state.processing_status = {}
     st.session_state.selected_videos = []
     st.session_state.initialized = True
@@ -62,7 +64,7 @@ def main():
         st.header("Navigation")
         page = st.selectbox(
             "Choose a page:",
-            ["Overview", "Video Discovery", "Processing Queue", "Batch Processing", 
+            ["Overview", "Video Discovery", "Plex Integration", "Processing Queue", "Batch Processing", 
              "Summary Results", "Export Center", "Model Management", "System Status", "Settings"]
         )
     
@@ -71,6 +73,8 @@ def main():
         show_overview_page()
     elif page == "Video Discovery":
         show_discovery_page()
+    elif page == "Plex Integration":
+        show_plex_integration_page()
     elif page == "Processing Queue":
         show_queue_page()
     elif page == "Batch Processing":
@@ -1347,6 +1351,99 @@ def show_settings_page():
                     st.error("Invalid import file format")
             except Exception as e:
                 st.error(f"Failed to read import file: {e}")
+
+def show_plex_integration_page():
+    """Display Plex integration setup and movie filtering."""
+    st.header("🎬 Plex Integration")
+    
+    plex = st.session_state.plex_integration
+    
+    # Connection setup
+    st.subheader("Plex Server Connection")
+    
+    status = plex.get_connection_status()
+    
+    col1, col2 = st.columns([2, 1])
+    
+    with col1:
+        server_url = st.text_input(
+            "Plex Server URL:",
+            value=plex.server_url or "http://localhost:32400",
+            help="Enter your Plex server URL (e.g., http://192.168.1.100:32400)"
+        )
+        
+        token = st.text_input(
+            "Plex Token:",
+            value="",
+            type="password",
+            help="Get your token from Plex settings or web interface XML"
+        )
+        
+        if st.button("Connect to Plex"):
+            if server_url and token:
+                plex.server_url = server_url
+                plex.token = token
+                
+                with st.spinner("Connecting to Plex server..."):
+                    if plex.verify_connection():
+                        st.success("Connected to Plex server successfully")
+                        plex.get_libraries()
+                        st.rerun()
+                    else:
+                        st.error("Failed to connect to Plex server")
+            else:
+                st.warning("Please enter both server URL and token")
+    
+    with col2:
+        st.write("**Connection Status:**")
+        if status['connected']:
+            st.success("✅ Connected")
+            st.write(f"Libraries: {status['libraries_count']}")
+            st.write(f"Movie libraries: {len(status['movie_libraries'])}")
+        else:
+            st.error("❌ Not connected")
+    
+    if not status['connected']:
+        st.info("To get your Plex token: Go to a movie in Plex web interface → three dots menu → Get Info → View XML. Your token is in the URL after 'X-Plex-Token='")
+        return
+    
+    # Movie filtering
+    st.subheader("Movie Library Filtering")
+    
+    if status['movie_libraries']:
+        selected_library = status['movie_libraries'][0]['key']
+        genres = plex.get_genres(selected_library)
+        
+        if genres:
+            col1, col2, col3 = st.columns(3)
+            
+            with col1:
+                selected_genres = st.multiselect("Filter by Genres:", genres)
+            
+            with col2:
+                min_rating = st.slider("Minimum Rating:", 0.0, 10.0, 6.0, 0.1)
+            
+            with col3:
+                year_range = st.slider("Year Range:", 1900, 2024, (2000, 2024))
+            
+            if st.button("Find Movies"):
+                criteria = {
+                    'min_rating': min_rating,
+                    'min_year': year_range[0],
+                    'max_year': year_range[1]
+                }
+                
+                if selected_genres:
+                    criteria['required_genres'] = selected_genres
+                
+                with st.spinner("Searching Plex library..."):
+                    filtered_movies = plex.filter_movies_for_processing(criteria)
+                
+                if filtered_movies:
+                    st.success(f"Found {len(filtered_movies)} movies matching criteria")
+                    
+                    for movie in filtered_movies[:10]:  # Show first 10
+                        st.write(f"- **{movie['title']}** ({movie.get('year', 'Unknown')}) - {movie.get('rating', 0):.1f}★")
 
 if __name__ == "__main__":
     main()
