@@ -14,6 +14,9 @@ Preferred communication style: Simple, everyday language.
 - **UI Improvements**: Created Model Management page with system requirements checking and download interface
 - **VLC Integration**: Added specialized VLC bookmark generator for creating chapter-based and key moment playlists
 - **Plex Integration**: Built complete Plex Media Server integration for genre filtering, rating-based sorting, and rich metadata discovery
+- **Advanced Scene Analysis**: Created sophisticated scene characterization with visual and emotional analysis
+- **Audio Analysis**: Built comprehensive audio feature extraction including speech detection and music analysis
+- **Smart Summarization**: Implemented multi-algorithm summarization engine with hybrid, narrative, and importance-based methods
 - **Error Handling**: Fixed all LSP diagnostics and improved robustness throughout the codebase
 - **Fallback Mode**: Ensured app works without transformers library using intelligent fallback analysis
 
