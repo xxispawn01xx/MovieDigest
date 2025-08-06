@@ -8,6 +8,7 @@ import sys
 import json
 import os
 import shutil
+import glob
 from core.model_downloader import ModelDownloader
 
 # Add utils to path for importing
@@ -119,14 +120,15 @@ def show_model_manager():
             "command": "huggingface-cli download mistralai/Mistral-7B-Instruct-v0.2 --local-dir models/local_llm"
         },
         {
-            "name": "Mistral-7B-v0.1 (Base)",
+            "name": "Mistral-7B-v0.1 (Base) - GATED",
             "repo": "mistralai/Mistral-7B-v0.1",
             "size": "13 GB", 
-            "description": "🎯 Uncensored base model - excellent for creative analysis",
-            "use_case": "Creative content, unrestricted analysis, all genres",
+            "description": "🔒 Gated model - requires HF token and access approval",
+            "use_case": "Creative content, unrestricted analysis (requires approval)",
             "speed": "Fast",
             "quality": "High",
             "recommended": False,
+            "gated": True,
             "command": "huggingface-cli download mistralai/Mistral-7B-v0.1 --local-dir models/local_llm"
         },
         {
@@ -154,9 +156,14 @@ def show_model_manager():
     ]
     
     for model in recommended_models:
-        # Check if model is installed
+        # Check if model is actually installed by looking for model files
         model_path = Path("models/local_llm")
-        is_installed = model_path.exists() and any(model_path.iterdir()) if model_path.exists() else False
+        is_installed = False
+        
+        if model_path.exists():
+            # Look for actual model files (safetensors, bin, or config files)
+            model_files = list(model_path.glob("*.safetensors")) + list(model_path.glob("*.bin")) + list(model_path.glob("config.json"))
+            is_installed = len(model_files) > 0
         
         # Header with status badge
         header_text = f"{'⭐ ' if model['recommended'] else ''}{model['name']} - {model['size']}"
@@ -204,21 +211,32 @@ def show_model_manager():
                             except Exception as e:
                                 st.error(f"Failed to remove model: {e}")
                 else:
-                    # One-click download button
-                    button_text = "🚀 One-Click Install" if model['recommended'] else "⬇️ Download"
-                    button_type = "primary" if model['recommended'] else "secondary"
+                    # One-click download button with gated model handling
+                    is_gated = model.get('gated', False)
                     
-                    if st.button(button_text, key=f"install_{model['repo']}", 
-                               type=button_type, use_container_width=True):
+                    if is_gated and not current_token:
+                        st.warning("🔒 This is a gated model. Add your HF token above first.")
+                        st.button("🔒 Requires HF Token", disabled=True, use_container_width=True)
+                    elif is_gated:
+                        st.info("🔒 Gated model - requires approval from model authors")
+                        if st.button("🔑 Download (Requires Approval)", key=f"install_{model['repo']}", 
+                                   type="secondary", use_container_width=True):
+                            st.warning("⚠️ If download fails, you may need to request access at the model's Hugging Face page.")
+                    else:
+                        button_text = "🚀 One-Click Install" if model['recommended'] else "⬇️ Download"
+                        button_type = "primary" if model['recommended'] else "secondary"
                         
-                        # Show download progress
-                        progress_bar = st.progress(0)
-                        status_text = st.empty()
-                        
-                        status_text.write("📥 Starting download...")
-                        progress_bar.progress(10)
-                        
-                        try:
+                        if st.button(button_text, key=f"install_{model['repo']}", 
+                                   type=button_type, use_container_width=True):
+                            
+                            # Show download progress
+                            progress_bar = st.progress(0)
+                            status_text = st.empty()
+                            
+                            status_text.write("📥 Starting download...")
+                            progress_bar.progress(10)
+                            
+                            try:
                             # Check if HF_TOKEN is available
                             hf_token = os.environ.get('HF_TOKEN', '')
                             
