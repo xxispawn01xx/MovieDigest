@@ -73,7 +73,10 @@ def show_video_discovery():
                     try:
                         from core.video_discovery import VideoDiscovery
                         discovery = VideoDiscovery()
-                        video_files = discovery.scan_directory(scan_directory)
+                        video_files_generator = discovery.scan_directory(scan_directory)
+                        
+                        # Convert generator to list to get count and store results
+                        video_files = list(video_files_generator)
                         
                         if video_files:
                             st.success(f"Found {len(video_files)} video files!")

@@ -10,6 +10,8 @@ Preferred LLM models: Mistral (uncensored) over traditional models like DialoGPT
 # Recent Changes
 
 ## Latest Updates (Aug 6, 2025)
+- **Windows Encoding Fix**: Resolved Unicode encoding issue preventing Mistral model downloads on Windows systems by implementing comprehensive encoding fix utility with UTF-8 forcing and fallback handling
+- **Directory Scanning Fix**: Fixed "object of type 'generator' has no len()" error in video discovery by properly converting generator to list before length calculation
 - **Email Marketing System**: Built comprehensive email outreach system based on RADflow project patterns, featuring entertainment industry templates, prospect database with 40+ verified contacts from major studios/streaming platforms, campaign management with SendGrid integration, and professional email templates targeting production companies, post-production facilities, and content acquisition teams
 - **One-Click LLM Model Downloads**: Created enhanced Model Management interface with one-click installation buttons for recommended models like Mistral-7B-Instruct (uncensored), including progress tracking, system requirements checking, and the exact huggingface-cli commands integrated as clickable buttons
 - **Audio Track & Subtitle Selection System**: Implemented comprehensive MediaTrackSelector that automatically detects and selects optimal audio tracks (default/English/most channels priority) and subtitles (SRT, VTT, ASS, SSA) from video files during processing
