@@ -1369,11 +1369,17 @@ def show_settings_page():
     
     # GPU settings
     with st.expander("GPU Settings"):
+        # Ensure MAX_GPU_MEMORY_GB is an integer for the slider
+        gpu_memory_value = config.MAX_GPU_MEMORY_GB
+        if isinstance(gpu_memory_value, (list, tuple)):
+            gpu_memory_value = gpu_memory_value[0] if gpu_memory_value else 10
+        gpu_memory_value = int(gpu_memory_value)
+        
         max_gpu_memory = st.slider(
             "Maximum GPU Memory Usage (GB)",
             min_value=4,
             max_value=16,
-            value=config.MAX_GPU_MEMORY_GB,
+            value=gpu_memory_value,
             step=1,
             help="Maximum GPU memory to use (leave some for system)"
         )
