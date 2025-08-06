@@ -25,7 +25,7 @@ class VideoSummarizer:
         self.max_summary_duration = config.MAX_SUMMARY_LENGTH_MINUTES * 60
         self.min_summary_duration = config.MIN_SUMMARY_LENGTH_MINUTES * 60
     
-    def create_summary(self, video_path: str, scenes: List[Dict], 
+    def create_summary(self, video_path: Path, scenes: List[Dict], 
                       transcription_data: List[Dict], 
                       narrative_analysis: Dict) -> Dict:
         """
@@ -40,7 +40,8 @@ class VideoSummarizer:
         Returns:
             Summary creation results
         """
-        video_path = Path(video_path)
+        if isinstance(video_path, str):
+            video_path = Path(video_path)
         logger.info(f"Creating summary for: {video_path.name}")
         
         try:
@@ -113,9 +114,23 @@ class VideoSummarizer:
         """
         logger.info(f"Selecting scenes for {target_duration/60:.1f} minute summary")
         
+        # Validate scenes have required fields
+        valid_scenes = []
+        for scene in scenes:
+            if all(key in scene for key in ['start_time', 'duration', 'scene_number']):
+                valid_scenes.append(scene)
+            else:
+                logger.warning(f"Skipping invalid scene: {scene}")
+        
+        if not valid_scenes:
+            logger.error("No valid scenes found for summarization")
+            raise RuntimeError("No valid scenes available - check scene detection output")
+        
+        logger.info(f"Processing {len(valid_scenes)} valid scenes")
+        
         # Combine all importance scores
         scored_scenes = []
-        for scene in scenes:
+        for scene in valid_scenes:
             combined_score = self._calculate_combined_importance(scene, narrative_analysis)
             scored_scenes.append({
                 **scene,
@@ -125,29 +140,42 @@ class VideoSummarizer:
         # Sort by importance
         scored_scenes.sort(key=lambda x: x['combined_importance'], reverse=True)
         
-        # Select scenes using knapsack-like algorithm
+        # Select scenes using strict duration constraints to prevent full copies
         selected_scenes = []
         total_duration = 0.0
         
-        # Always include highest importance scenes
+        # Enforce strict 15% compression ratio from config
+        logger.info(f"Target compression: {self.target_compression*100:.1f}%")
+        logger.info(f"Target duration: {target_duration/60:.1f} minutes")
+        
+        # Only select scenes that fit within target duration
         for scene in scored_scenes:
             if total_duration + scene['duration'] <= target_duration:
                 selected_scenes.append(scene)
                 total_duration += scene['duration']
-            elif total_duration < target_duration * 0.8:
-                # Allow slight over-selection if we're under 80% of target
-                selected_scenes.append(scene)
-                total_duration += scene['duration']
+                logger.debug(f"Added scene {scene['scene_number']}: +{scene['duration']:.1f}s (total: {total_duration/60:.1f}min)")
+            else:
+                # Try to fit a shorter version of the scene if possible
+                remaining_time = target_duration - total_duration
+                if remaining_time > 5:  # At least 5 seconds worth including
+                    truncated_scene = scene.copy()
+                    truncated_scene['duration'] = remaining_time
+                    truncated_scene['end_time'] = truncated_scene['start_time'] + remaining_time
+                    selected_scenes.append(truncated_scene)
+                    total_duration += remaining_time
+                    logger.debug(f"Added truncated scene {scene['scene_number']}: +{remaining_time:.1f}s")
                 break
         
-        # Ensure narrative flow - add connecting scenes if needed
-        selected_scenes = self._ensure_narrative_flow(selected_scenes, scenes, target_duration)
+        # Skip narrative flow enhancement to maintain strict compression ratio
+        # selected_scenes = self._ensure_narrative_flow(selected_scenes, scenes, target_duration)
         
         # Sort by chronological order
         selected_scenes.sort(key=lambda x: x['start_time'])
         
-        logger.info(f"Selected {len(selected_scenes)} scenes "
-                   f"totaling {total_duration/60:.1f} minutes")
+        final_duration = sum(scene['duration'] for scene in selected_scenes)
+        actual_compression = final_duration / (sum(scene['duration'] for scene in scenes) or 1)
+        logger.info(f"Selected {len(selected_scenes)} scenes totaling {final_duration/60:.1f} minutes")
+        logger.info(f"Achieved compression ratio: {actual_compression*100:.1f}%")
         
         return selected_scenes
     
@@ -300,10 +328,10 @@ class VideoSummarizer:
             input_args.extend(['-ss', str(start_time), '-t', str(duration), '-i', str(video_path)])
             filter_parts.append(f"[{i}:v][{i}:a]")
         
-        # Build ffmpeg command - simpler approach for better compatibility
+        # Validate scene selection
         if len(selected_scenes) == 0:
-            logger.warning("No scenes selected for summary")
-            return None
+            logger.error("No scenes selected for summary - this should not happen")
+            raise RuntimeError("Scene selection failed - no scenes available for summary")
         
         # Create a simple concatenation using individual clips
         cmd = ['ffmpeg']
@@ -316,19 +344,22 @@ class VideoSummarizer:
                 '-i', str(video_path)
             ])
         
-        # Simple concat filter with subtitle preservation
+        # Fixed concatenation approach for better seeking and playback
         if len(selected_scenes) == 1:
-            # Single scene - no concatenation needed
+            # Single scene - direct encoding
             cmd.extend([
                 '-c:v', 'libx264',
                 '-c:a', 'aac',
-                '-c:s', 'mov_text',  # Preserve subtitles
-                '-avoid_negative_ts', 'make_zero',
+                '-movflags', '+faststart',  # Enable seeking
+                '-reset_timestamps', '1',   # Reset timestamps for proper seeking
                 '-y',
                 str(summary_path)
             ])
         else:
-            # Multiple scenes - concatenate with subtitle support
+            # Multiple scenes - use direct filter_complex for better seeking
+            logger.info(f"Concatenating {len(selected_scenes)} scenes using filter_complex")
+            
+            # Build filter_complex for concatenation
             filter_str = ''.join([f'[{i}:v][{i}:a]' for i in range(len(selected_scenes))])
             filter_str += f'concat=n={len(selected_scenes)}:v=1:a=1[outv][outa]'
             
@@ -336,11 +367,12 @@ class VideoSummarizer:
                 '-filter_complex', filter_str,
                 '-map', '[outv]',
                 '-map', '[outa]',
-                '-map', '0:s?',  # Map subtitles if present
                 '-c:v', 'libx264',
-                '-c:a', 'aac', 
-                '-c:s', 'mov_text',  # Preserve subtitles in MP4
-                '-avoid_negative_ts', 'make_zero',
+                '-c:a', 'aac',
+                '-preset', 'fast',  # Faster encoding
+                '-crf', '23',  # Good quality balance
+                '-movflags', '+faststart',  # Enable seeking
+                '-avoid_negative_ts', 'make_zero',  # Fix timestamp issues
                 '-y',
                 str(summary_path)
             ])

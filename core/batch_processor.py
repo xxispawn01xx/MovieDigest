@@ -321,8 +321,15 @@ class BatchProcessor:
             
             # Stage 5: Summary Creation
             self._update_status(video_id, 'summary_creation', 80.0)
+            
+            # Validate inputs before summary creation
+            if not scenes:
+                logger.error(f"No scenes detected for {file_path} - cannot create summary")
+                raise RuntimeError("Scene detection failed - no scenes available")
+            
+            logger.info(f"Creating summary with {len(scenes)} scenes for {Path(file_path).name}")
             summary_result = self.summarizer.create_summary(
-                file_path, scenes, transcription_data, narrative_analysis
+                Path(file_path), scenes, transcription_data, narrative_analysis
             )
             
             # Stage 6: Validation

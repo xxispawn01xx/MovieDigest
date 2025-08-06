@@ -189,15 +189,15 @@ def show_overview_page():
     
     with col1:
         if st.button("🔍 Scan for Videos", use_container_width=True):
-            st.switch_page("Video Discovery")
+            st.rerun()
     
     with col2:
         if st.button("⚡ Start Processing", use_container_width=True):
-            st.switch_page("Batch Processing")
+            st.rerun()
     
     with col3:
         if st.button("📈 View Results", use_container_width=True):
-            st.switch_page("Summary Results")
+            st.rerun()
 
 def show_discovery_page():
     """Display video discovery and scanning interface."""
