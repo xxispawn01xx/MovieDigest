@@ -453,8 +453,7 @@ def show_batch_processing_page():
     # Processing controls
     st.subheader("Processing Controls")
     
-    # Debug info to help identify the issue
-    st.write(f"Debug: is_processing = {processing_status['is_processing']}, is_paused = {processing_status.get('is_paused', False)}")
+
     
     col1, col2, col3 = st.columns(3)
     

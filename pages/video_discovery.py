@@ -106,10 +106,14 @@ def show_video_discovery():
         # Create DataFrame for display
         video_data = []
         for video in videos:
+            # Convert file_size from bytes to MB for display
+            file_size_mb = video.get('file_size', 0) / (1024 * 1024)
+            duration_min = video.get('duration_seconds', 0) / 60 if video.get('duration_seconds') else 0
+            
             video_data.append({
                 'Filename': Path(video['file_path']).name,
-                'Size': f"{video['file_size_mb']:.1f} MB",
-                'Duration': f"{video.get('duration_minutes', 0):.1f} min",
+                'Size': f"{file_size_mb:.1f} MB",
+                'Duration': f"{duration_min:.1f} min",
                 'Status': video.get('status', 'Discovered').title(),
                 'Path': video['file_path']
             })
