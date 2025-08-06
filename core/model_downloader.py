@@ -88,6 +88,106 @@ class ModelDownloader:
             logger.error(f"Failed to download Whisper model '{model_name}': {e}")
             return False
     
+    def download_huggingface_model(self, model_name: str, hf_token: str = None) -> bool:
+        """
+        Download LLM model from Hugging Face Hub.
+        
+        Args:
+            model_name: Hugging Face model identifier (e.g., 'microsoft/DialoGPT-medium')
+            hf_token: Hugging Face access token for private models
+            
+        Returns:
+            True if download successful
+        """
+        try:
+            from huggingface_hub import snapshot_download, login
+            
+            # Login with token if provided
+            if hf_token:
+                login(token=hf_token)
+                logger.info("Authenticated with Hugging Face token")
+            
+            # Create target directory
+            target_dir = self.llm_dir / model_name.replace('/', '_')
+            target_dir.mkdir(parents=True, exist_ok=True)
+            
+            logger.info(f"Downloading {model_name} from Hugging Face...")
+            
+            # Download model
+            snapshot_download(
+                repo_id=model_name,
+                local_dir=str(target_dir),
+                local_dir_use_symlinks=False,
+                token=hf_token
+            )
+            
+            logger.info(f"Successfully downloaded {model_name} to {target_dir}")
+            return True
+            
+        except ImportError:
+            logger.error("huggingface_hub not installed. Run: pip install huggingface_hub")
+            return False
+        except Exception as e:
+            logger.error(f"Failed to download {model_name}: {e}")
+            return False
+    
+    def download_ollama_model(self, model_name: str) -> bool:
+        """
+        Download and setup model using Ollama.
+        
+        Args:
+            model_name: Ollama model name (e.g., 'llama2', 'mistral')
+            
+        Returns:
+            True if download successful
+        """
+        try:
+            import subprocess
+            import json
+            from datetime import datetime
+            
+            # Check if Ollama is installed
+            result = subprocess.run(['ollama', '--version'], 
+                                 capture_output=True, text=True)
+            if result.returncode != 0:
+                logger.error("Ollama not installed. Install from: https://ollama.ai")
+                return False
+            
+            logger.info(f"Downloading Ollama model: {model_name}")
+            
+            # Pull the model
+            result = subprocess.run(['ollama', 'pull', model_name], 
+                                 capture_output=True, text=True)
+            
+            if result.returncode == 0:
+                logger.info(f"Successfully downloaded Ollama model: {model_name}")
+                
+                # Create reference for our app
+                ollama_dir = self.llm_dir / "ollama"
+                ollama_dir.mkdir(parents=True, exist_ok=True)
+                
+                model_info = {
+                    "model_name": model_name,
+                    "type": "ollama",
+                    "downloaded_at": str(datetime.now()),
+                    "status": "ready"
+                }
+                
+                with open(ollama_dir / f"{model_name}.json", 'w') as f:
+                    json.dump(model_info, f, indent=2)
+                
+                return True
+            else:
+                logger.error(f"Failed to download Ollama model: {result.stderr}")
+                return False
+                
+        except FileNotFoundError:
+            logger.error("Ollama not found in PATH. Install from: https://ollama.ai")
+            return False
+        except Exception as e:
+            logger.error(f"Error downloading Ollama model: {e}")
+            return False
+    
     def get_whisper_model_info(self, model_name: str) -> Optional[Dict]:
         """
         Get information about a Whisper model.

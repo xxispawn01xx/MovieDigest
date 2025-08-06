@@ -114,7 +114,8 @@ def main():
     elif page == "Export Center":
         show_export_center_page()
     elif page == "Model Management":
-        show_model_management_page()
+        from pages.model_manager import show_model_manager
+        show_model_manager()
     elif page == "System Status":
         show_status_page()
     elif page == "Settings":
