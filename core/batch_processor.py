@@ -22,6 +22,7 @@ from .validation import ValidationMetrics
 from .vlc_bookmarks import VLCBookmarkGenerator
 from .advanced_scene_analysis import AdvancedSceneAnalyzer
 from .audio_analysis import AudioAnalyzer
+from utils.gpu_manager import GPUManager
 
 import config
 
@@ -43,6 +44,7 @@ class BatchProcessor:
         self.bookmark_generator = VLCBookmarkGenerator()
         self.advanced_scene_analyzer = AdvancedSceneAnalyzer()
         self.audio_analyzer = AudioAnalyzer()
+        self.gpu_manager = GPUManager()
         
         # Processing queue and state
         self.processing_queue = queue.Queue()
@@ -256,18 +258,59 @@ class BatchProcessor:
         return batch
     
     def _process_video_batch(self, batch: List[Dict]):
-        """Process a batch of videos."""
+        """Process a batch of videos with intelligent memory management."""
         logger.info(f"Processing batch of {len(batch)} videos")
         
-        for video_item in batch:
+        for idx, video_item in enumerate(batch):
             if not self.is_processing:
                 # Put video back in queue if processing was stopped
                 self.processing_queue.put(video_item)
                 break
             
+            # Check memory pressure before processing each video
+            memory_status = self.gpu_manager.check_memory_pressure()
+            if memory_status['action'] == 'emergency_cleanup':
+                logger.warning(f"Critical memory pressure ({memory_status['usage_percent']:.1f}%) - performing emergency cleanup")
+                self.gpu_manager.emergency_memory_cleanup()
+            elif memory_status['action'] == 'aggressive_cleanup':
+                logger.info(f"High memory pressure ({memory_status['usage_percent']:.1f}%) - performing aggressive cleanup")
+                self.gpu_manager.optimize_memory_usage(aggressive=True)
+            elif memory_status['action'] == 'standard_cleanup':
+                logger.info(f"Medium memory pressure ({memory_status['usage_percent']:.1f}%) - performing standard cleanup")
+                self.gpu_manager.optimize_memory_usage()
+            
             try:
-                self._process_single_video(video_item)
+                # Process video with memory monitoring
+                self._process_single_video_with_memory_management(video_item)
                 self.processing_stats['successful'] += 1
+                
+                # Cleanup after each video to prevent memory accumulation
+                if idx % 2 == 0:  # Every 2 videos
+                    self.gpu_manager.optimize_memory_usage()
+                
+            except torch.cuda.OutOfMemoryError as oom:
+                error_msg = f"CUDA out of memory for {video_item['file_path']}: {oom}"
+                logger.error(error_msg)
+                
+                # Attempt recovery
+                logger.info("Attempting memory recovery...")
+                self.gpu_manager.emergency_memory_cleanup()
+                
+                # Try processing again with reduced settings
+                try:
+                    logger.info("Retrying with emergency settings...")
+                    self._process_single_video_emergency_mode(video_item)
+                    self.processing_stats['successful'] += 1
+                except Exception as retry_error:
+                    error_msg = f"Video processing failed even in emergency mode: {video_item['file_path']}: {retry_error}"
+                    logger.error(error_msg)
+                    self.errors.append(error_msg)
+                    self.processing_stats['failed'] += 1
+                    
+                    safe_error_msg = str(retry_error).encode('utf-8', errors='replace').decode('utf-8')
+                    self.db.update_processing_status(
+                        video_item['video_id'], 'failed', error_message=safe_error_msg
+                    )
                 
             except Exception as e:
                 error_msg = f"Video processing failed: {video_item['file_path']}: {e}"
@@ -289,6 +332,34 @@ class BatchProcessor:
             # Update progress
             if self.progress_callback:
                 self._update_progress()
+    
+    def _process_single_video_with_memory_management(self, video_item: Dict):
+        """Process a single video with enhanced memory management."""
+        return self._process_single_video(video_item)
+    
+    def _process_single_video_emergency_mode(self, video_item: Dict):
+        """Process video with minimal memory usage settings."""
+        logger.info(f"Processing {video_item['file_path']} in emergency mode")
+        
+        # Temporarily reduce batch sizes and model settings
+        original_whisper_batch_size = getattr(config, 'WHISPER_BATCH_SIZE', 16)
+        original_llm_batch_size = getattr(config, 'LLM_BATCH_SIZE', 8)
+        
+        # Emergency settings - much smaller memory footprint
+        config.WHISPER_BATCH_SIZE = 4
+        config.LLM_BATCH_SIZE = 2
+        
+        try:
+            # Force memory cleanup before starting
+            self.gpu_manager.emergency_memory_cleanup()
+            
+            # Process with reduced settings
+            self._process_single_video(video_item)
+            
+        finally:
+            # Restore original settings
+            config.WHISPER_BATCH_SIZE = original_whisper_batch_size
+            config.LLM_BATCH_SIZE = original_llm_batch_size
     
     def _process_single_video(self, video_item: Dict):
         """Process a single video through the complete pipeline."""
@@ -397,12 +468,17 @@ class BatchProcessor:
     def _check_system_resources(self) -> bool:
         """Check if system has sufficient resources to continue processing."""
         try:
-            # Check GPU memory if CUDA is available
+            # Enhanced GPU memory check using GPU manager
             if torch.cuda.is_available():
-                gpu_memory_used = torch.cuda.memory_allocated() / (1024**3)  # GB
-                if gpu_memory_used > config.MAX_GPU_MEMORY_GB:
-                    logger.warning(f"GPU memory usage high: {gpu_memory_used:.1f}GB")
-                    return False
+                memory_status = self.gpu_manager.check_memory_pressure()
+                if memory_status['pressure_level'] == 'critical':
+                    logger.warning(f"GPU memory critically high: {memory_status['usage_percent']:.1f}%")
+                    # Attempt emergency cleanup
+                    self.gpu_manager.emergency_memory_cleanup()
+                    # Recheck after cleanup
+                    memory_status = self.gpu_manager.check_memory_pressure()
+                    if memory_status['pressure_level'] == 'critical':
+                        return False
             
             # Check system memory
             memory_percent = psutil.virtual_memory().percent
@@ -411,10 +487,14 @@ class BatchProcessor:
                 return False
             
             # Check disk space
-            disk_usage = psutil.disk_usage('/').percent
-            if disk_usage > 90:
-                logger.warning(f"Disk usage high: {disk_usage}%")
-                return False
+            try:
+                disk_usage = psutil.disk_usage('/').percent
+                if disk_usage > 90:
+                    logger.warning(f"Disk usage high: {disk_usage}%")
+                    return False
+            except:
+                # Handle cases where disk usage check fails (e.g., Windows)
+                pass
             
             return True
             

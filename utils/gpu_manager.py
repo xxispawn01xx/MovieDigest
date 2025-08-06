@@ -237,22 +237,118 @@ class GPUManager:
         except Exception as e:
             logger.error(f"Memory release failed: {e}")
     
-    def optimize_memory_usage(self):
-        """Optimize GPU memory usage by clearing caches and releasing unused memory."""
+    def optimize_memory_usage(self, aggressive: bool = False):
+        """
+        Optimize GPU memory usage by clearing caches and releasing unused memory.
+        
+        Args:
+            aggressive: If True, performs more aggressive cleanup
+        """
         if not self.cuda_available:
             return
         
         try:
-            # Clear PyTorch cache
-            torch.cuda.empty_cache()
+            # Get memory before cleanup
+            memory_before = torch.cuda.memory_allocated() / (1024**3)
             
-            # Synchronize to ensure all operations are complete
+            # Standard cleanup
+            torch.cuda.empty_cache()
             torch.cuda.synchronize()
             
-            logger.info("GPU memory optimization completed")
+            if aggressive:
+                # Force garbage collection
+                import gc
+                gc.collect()
+                
+                # Clear all cached memory
+                torch.cuda.empty_cache()
+                
+                # Reset peak memory stats
+                torch.cuda.reset_peak_memory_stats()
+                torch.cuda.reset_accumulated_memory_stats()
+                
+                # Additional synchronization
+                torch.cuda.synchronize()
+            
+            memory_after = torch.cuda.memory_allocated() / (1024**3)
+            freed = memory_before - memory_after
+            
+            logger.info(f"GPU memory optimization completed - Freed {freed:.2f}GB (aggressive={aggressive})")
             
         except Exception as e:
             logger.error(f"Memory optimization failed: {e}")
+    
+    def check_memory_pressure(self) -> Dict:
+        """
+        Check current memory pressure and recommend actions.
+        
+        Returns:
+            Dict with memory status and recommendations
+        """
+        if not self.cuda_available:
+            return {'status': 'no_gpu', 'action': 'continue'}
+        
+        try:
+            total_memory = torch.cuda.get_device_properties(0).total_memory / (1024**3)
+            allocated = torch.cuda.memory_allocated() / (1024**3)
+            reserved = torch.cuda.memory_reserved() / (1024**3)
+            
+            usage_percent = (allocated / total_memory) * 100
+            pressure_level = 'low'
+            action = 'continue'
+            
+            if usage_percent > 90:
+                pressure_level = 'critical'
+                action = 'emergency_cleanup'
+            elif usage_percent > 80:
+                pressure_level = 'high'
+                action = 'aggressive_cleanup'
+            elif usage_percent > 70:
+                pressure_level = 'medium' 
+                action = 'standard_cleanup'
+            
+            return {
+                'status': 'ok',
+                'total_gb': total_memory,
+                'allocated_gb': allocated,
+                'reserved_gb': reserved,
+                'usage_percent': usage_percent,
+                'pressure_level': pressure_level,
+                'action': action,
+                'available_gb': total_memory - allocated
+            }
+            
+        except Exception as e:
+            logger.error(f"Memory pressure check failed: {e}")
+            return {'status': 'error', 'action': 'continue', 'error': str(e)}
+    
+    def emergency_memory_cleanup(self):
+        """Emergency memory cleanup when running out of VRAM."""
+        if not self.cuda_available:
+            return
+            
+        try:
+            logger.warning("Emergency memory cleanup initiated")
+            
+            # Release all reserved memory
+            self.release_memory()
+            
+            # Aggressive optimization
+            self.optimize_memory_usage(aggressive=True)
+            
+            # Force Python garbage collection
+            import gc
+            gc.collect()
+            
+            # Multiple cache clears
+            for _ in range(3):
+                torch.cuda.empty_cache()
+                torch.cuda.synchronize()
+            
+            logger.info("Emergency cleanup completed")
+            
+        except Exception as e:
+            logger.error(f"Emergency cleanup failed: {e}")
     
     def get_memory_stats(self) -> Dict:
         """Get detailed memory statistics."""

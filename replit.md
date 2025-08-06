@@ -10,6 +10,8 @@ Preferred LLM models: Mistral (uncensored) over traditional models like DialoGPT
 # Recent Changes
 
 ## Latest Updates (Aug 6, 2025)
+- **CUDA Memory Management Enhancement**: Implemented comprehensive CUDA out-of-memory prevention system with intelligent memory pressure detection, multi-tier cleanup (standard/aggressive/emergency), automatic OOM recovery with reduced settings, and sustained processing optimization for RTX 3060 systems
+- **Robust Audio Extraction**: Enhanced audio extraction with 3-tier FFmpeg fallback system to handle complex MKV files with encoding issues, ensuring reliable transcription for all video formats
 - **Windows Encoding Fix**: Resolved Unicode encoding issue preventing Mistral model downloads on Windows systems by implementing comprehensive encoding fix utility with UTF-8 forcing and fallback handling
 - **Directory Scanning Fix**: Fixed "object of type 'generator' has no len()" error in video discovery by properly converting generator to list before length calculation
 - **Email Marketing System**: Built comprehensive email outreach system based on RADflow project patterns, featuring entertainment industry templates, prospect database with 40+ verified contacts from major studios/streaming platforms, campaign management with SendGrid integration, and professional email templates targeting production companies, post-production facilities, and content acquisition teams
