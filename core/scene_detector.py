@@ -158,10 +158,62 @@ class SceneDetector:
         return filtered_scenes
     
     def _filter_credits_scenes(self, scenes: List[Dict], video_path: Path) -> List[Dict]:
-        """Remove opening and closing credits from scenes."""
+        """Remove opening and closing credits from scenes using advanced detection."""
         if not scenes:
             return scenes
         
+        try:
+            # Try advanced credits detection first
+            from core.credits_detector import CreditsDetector
+            credits_detector = CreditsDetector()
+            
+            # Get confidence scores for detection
+            confidence_scores = credits_detector.get_detection_confidence(str(video_path))
+            
+            # Use advanced detection if confidence is high enough
+            if (confidence_scores['opening'] > 0.6 or confidence_scores['closing'] > 0.6):
+                logger.info("Using advanced credits detection")
+                credits_regions = credits_detector.detect_credits_regions(str(video_path))
+                
+                filtered_scenes = []
+                credits_removed = 0
+                
+                for scene in scenes:
+                    scene_start = scene['start_time']
+                    scene_end = scene['end_time']
+                    
+                    # Check against detected opening credits
+                    if credits_regions['opening']:
+                        opening_start, opening_end = credits_regions['opening']
+                        if scene_start >= opening_start and scene_end <= opening_end:
+                            logger.info(f"Skipping detected opening credits scene: {scene_start:.1f}s - {scene_end:.1f}s")
+                            credits_removed += 1
+                            continue
+                    
+                    # Check against detected closing credits
+                    if credits_regions['closing']:
+                        closing_start, closing_end = credits_regions['closing']
+                        if scene_start >= closing_start and scene_end <= closing_end:
+                            logger.info(f"Skipping detected closing credits scene: {scene_start:.1f}s - {scene_end:.1f}s")
+                            credits_removed += 1
+                            continue
+                    
+                    filtered_scenes.append(scene)
+                
+                if credits_removed > 0:
+                    logger.info(f"Advanced detection removed {credits_removed} credits scenes")
+                
+                return filtered_scenes
+            
+        except Exception as e:
+            logger.warning(f"Advanced credits detection failed, falling back to basic method: {e}")
+        
+        # Fallback to basic percentage-based method
+        logger.info("Using basic percentage-based credits detection")
+        return self._filter_credits_basic(scenes, video_path)
+    
+    def _filter_credits_basic(self, scenes: List[Dict], video_path: Path) -> List[Dict]:
+        """Basic credits filtering using percentage-based approach."""
         # Get video duration for percentage calculations
         video_duration = self._get_video_duration(video_path)
         if not video_duration:

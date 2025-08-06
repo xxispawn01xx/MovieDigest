@@ -28,6 +28,10 @@ Preferred communication style: Simple, everyday language.
 - **Configuration System**: Added environment variables to control auto-downloads, database init, and offline mode
 - **Development Mode**: Added visual indicators when development flags are active
 - **Fallback Mode**: Ensured app works without transformers library using intelligent fallback analysis
+- **Credits Detection Enhancement**: Built advanced computer vision-based credits detection system with visual pattern analysis, text density detection, audio analysis, and fade transition detection
+- **Subtitle Preservation**: Fixed FFmpeg commands to preserve original video subtitles in summary outputs
+- **VLC Auto-Detection**: Implemented proper VLC bookmark naming convention for automatic detection when opening videos
+- **Custom Output Directory**: Added GUI interface for selecting custom output directories in Settings page
 
 # System Architecture
 
