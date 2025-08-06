@@ -542,10 +542,17 @@ def show_processing_page():
                 else:
                     st.error("Failed to start processing")
         else:
-            if st.button("⏸️ Stop Processing", type="secondary", use_container_width=True):
-                st.session_state.batch_processor.stop_batch_processing()
-                st.info("Processing will stop after current batch completes")
-                st.rerun()
+            # Show pause/resume button if processing is active
+            if processing_status.get('is_paused', False):
+                if st.button("▶️ Resume Processing", type="primary", use_container_width=True):
+                    st.session_state.batch_processor.resume_batch_processing()
+                    st.success("Processing resumed!")
+                    st.rerun()
+            else:
+                if st.button("⏸️ Pause Processing", type="secondary", use_container_width=True):
+                    st.session_state.batch_processor.pause_batch_processing()
+                    st.info("Processing paused - click Resume to continue")
+                    st.rerun()
     
     with col2:
         max_batch_size = min(processing_status['current_batch_size'] + 2, 5)  # Allow up to 5 or current+2
@@ -560,8 +567,15 @@ def show_processing_page():
             st.success(f"Batch size updated to {batch_size}")
     
     with col3:
-        if st.button("🔄 Refresh Status", use_container_width=True):
-            st.rerun()
+        # Stop button (complete stop, not pause)
+        if processing_status['is_processing']:
+            if st.button("⏹️ Stop Processing", type="secondary", use_container_width=True):
+                st.session_state.batch_processor.stop_batch_processing()
+                st.info("Processing stopped - use Start to begin again")
+                st.rerun()
+        else:
+            if st.button("🔄 Refresh Status", use_container_width=True):
+                st.rerun()
     
     # Show queued videos from database
     st.subheader("Queued Videos")

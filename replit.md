@@ -14,6 +14,7 @@ Preferred communication style: Simple, everyday language.
 - **Video Seeking Fix**: Implemented proper FFmpeg concatenation with faststart flag and timestamp reset for seeking compatibility
 - **Streamlit Navigation Fix**: Replaced problematic st.switch_page calls with st.rerun to prevent app crashes
 - **Scene Selection Enhancement**: Added validation to prevent invalid scene data and ensure proper duration constraints
+- **Enhanced Pause/Resume System**: Added comprehensive pause/resume controls with separate pause (temporary) vs stop (complete) functionality for better batch processing control
 - **Queue Management Fix**: Fixed GUI update issue where clearing the queue updated console but not the interface - now properly syncs memory and database
 - **Error Handling Improvement**: Eliminated fallback video copying that was causing full-length outputs instead of summaries
 - **Windows Unicode Fix**: Resolved Windows Command Prompt encoding issues with RTX 3060 configuration detection

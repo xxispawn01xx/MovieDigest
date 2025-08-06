@@ -47,6 +47,7 @@ class BatchProcessor:
         # Processing queue and state
         self.processing_queue = queue.Queue()
         self.is_processing = False
+        self.is_paused = False
         self.current_batch_size = config.DEFAULT_BATCH_SIZE
         self.max_batch_size = config.MAX_BATCH_SIZE
         
@@ -189,22 +190,35 @@ class BatchProcessor:
             
         logger.info(f"Loaded {len(queued_videos)} queued videos into processing queue")
     
+    def pause_batch_processing(self):
+        """Pause batch processing (can be resumed)."""
+        logger.info("Pausing batch processing...")
+        self.is_paused = True
+    
+    def resume_batch_processing(self):
+        """Resume paused batch processing."""
+        logger.info("Resuming batch processing...")
+        self.is_paused = False
+        
     def stop_batch_processing(self):
-        """Stop batch processing gracefully."""
+        """Stop batch processing completely."""
         logger.info("Stopping batch processing...")
         self.is_processing = False
+        self.is_paused = False
         
-        # Clear any remaining items from queue to prevent app crashes
-        try:
-            while not self.processing_queue.empty():
-                self.processing_queue.get_nowait()
-        except queue.Empty:
-            pass
+        # Note: We don't clear the queue anymore to allow resuming
+        # The queue will be preserved for potential restart
     
     def _process_batch_worker(self):
         """Worker thread for batch processing."""
         try:
             while self.is_processing and not self.processing_queue.empty():
+                # Check if paused
+                if self.is_paused:
+                    logger.info("Processing paused, waiting...")
+                    time.sleep(5)  # Check every 5 seconds
+                    continue
+                
                 # Process videos in batches
                 batch = self._get_next_batch()
                 
@@ -222,12 +236,7 @@ class BatchProcessor:
             self.errors.append(f"Batch processing error: {e}")
         finally:
             self.is_processing = False
-            # Clear queue to prevent hanging
-            try:
-                while not self.processing_queue.empty():
-                    self.processing_queue.get_nowait()
-            except queue.Empty:
-                pass
+            self.is_paused = False
             logger.info("Batch processing completed")
     
     def _get_next_batch(self) -> List[Dict]:
@@ -540,5 +549,6 @@ class BatchProcessor:
             'database_stats': db_stats,
             'batch_size': self.current_batch_size,
             'max_batch_size': self.max_batch_size,
-            'is_processing': self.is_processing
+            'is_processing': self.is_processing,
+            'is_paused': self.is_paused
         }
