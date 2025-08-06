@@ -164,33 +164,110 @@ class OfflineTranscriber:
             # Use recommended audio track
             recommended_audio = stream_info.get('recommended_audio', 0)
             
-            # Extract audio using ffmpeg with track selection
-            cmd = [
+            # Try multiple FFmpeg approaches for robust audio extraction
+            success = False
+            last_error = ""
+            
+            # Method 1: Specific audio track extraction
+            cmd_specific = [
                 'ffmpeg',
                 '-i', str(video_path),
-                '-map', f'0:a:{recommended_audio}',  # Select specific audio track
+                '-map', f'0:a:{recommended_audio}',
                 '-acodec', 'pcm_s16le',
-                '-ac', '1',  # Mono audio
-                '-ar', '16000',  # 16kHz sample rate
-                '-af', 'volume=1.0',  # Ensure audio normalization
-                '-t', '3600',  # Limit to 1 hour to prevent memory issues
-                '-y',  # Overwrite output
+                '-ac', '1',
+                '-ar', '16000',
+                '-af', 'volume=1.0',
+                '-t', '3600',
+                '-y',
                 str(audio_path)
             ]
             
             logger.info(f"Extracting audio from track {recommended_audio} for transcription")
             
-            result = subprocess.run(
-                cmd,
-                capture_output=True,
-                text=True,
-                encoding='utf-8',
-                errors='replace',
-                timeout=300  # 5 minute timeout
-            )
+            try:
+                result = subprocess.run(
+                    cmd_specific,
+                    capture_output=True,
+                    text=True,
+                    encoding='utf-8',
+                    errors='replace',
+                    timeout=300
+                )
+                
+                if result.returncode == 0 and audio_path.exists() and audio_path.stat().st_size > 0:
+                    success = True
+                else:
+                    last_error = result.stderr
+            except Exception as e:
+                last_error = str(e)
             
-            if result.returncode != 0:
-                raise RuntimeError(f"FFmpeg failed: {result.stderr}")
+            # Method 2: Simple audio extraction (no specific track)
+            if not success:
+                logger.warning("Specific track extraction failed, trying simple extraction")
+                cmd_simple = [
+                    'ffmpeg',
+                    '-i', str(video_path),
+                    '-vn',  # No video
+                    '-acodec', 'pcm_s16le',
+                    '-ac', '1',
+                    '-ar', '16000',
+                    '-t', '3600',
+                    '-y',
+                    str(audio_path)
+                ]
+                
+                try:
+                    result = subprocess.run(
+                        cmd_simple,
+                        capture_output=True,
+                        text=True,
+                        encoding='utf-8',
+                        errors='replace',
+                        timeout=300
+                    )
+                    
+                    if result.returncode == 0 and audio_path.exists() and audio_path.stat().st_size > 0:
+                        success = True
+                    else:
+                        last_error = result.stderr
+                except Exception as e:
+                    last_error = str(e)
+            
+            # Method 3: Most basic extraction (no processing)
+            if not success:
+                logger.warning("Simple extraction failed, trying basic extraction")
+                cmd_basic = [
+                    'ffmpeg',
+                    '-i', str(video_path),
+                    '-vn',
+                    '-acodec', 'copy',
+                    '-t', '3600',
+                    '-y',
+                    str(audio_path).replace('.wav', '.aac')  # Try different format
+                ]
+                
+                basic_audio_path = Path(str(audio_path).replace('.wav', '.aac'))
+                
+                try:
+                    result = subprocess.run(
+                        cmd_basic,
+                        capture_output=True,
+                        text=True,
+                        encoding='utf-8',
+                        errors='replace',
+                        timeout=300
+                    )
+                    
+                    if result.returncode == 0 and basic_audio_path.exists() and basic_audio_path.stat().st_size > 0:
+                        audio_path = basic_audio_path
+                        success = True
+                    else:
+                        last_error = result.stderr
+                except Exception as e:
+                    last_error = str(e)
+            
+            if not success:
+                raise RuntimeError(f"FFmpeg failed with all methods. Last error: {last_error}")
             
             # Verify audio file exists and has content
             if not audio_path.exists() or audio_path.stat().st_size == 0:
