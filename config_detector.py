@@ -34,11 +34,11 @@ def get_config():
     if env == "rtx_3060_local":
         # Import RTX 3060 optimized config
         import config_rtx3060 as config
-        print("🚀 RTX 3060 configuration loaded")
+        print("RTX 3060 configuration loaded")
     else:
         # Import standard config with CPU fallback
         import config as config
-        print(f"💻 Standard configuration loaded for {env}")
+        print(f"Standard configuration loaded for {env}")
     
     return config, env
 

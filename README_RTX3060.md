@@ -77,7 +77,7 @@ result = model.transcribe(
 
 ### GPU Status Indicators
 ```
-🚀 RTX 3060 configuration loaded
+RTX 3060 configuration loaded
 Transcriber initialized on RTX 3060: NVIDIA GeForce RTX 3060 (12.9GB)
 GPU Manager initialized - RTX 3060: NVIDIA GeForce RTX 3060
 ```
@@ -100,10 +100,10 @@ GPU Manager initialized - RTX 3060: NVIDIA GeForce RTX 3060
 ```
 INFO:core.batch_processor:Processing batch of 3 videos
 INFO:core.batch_processor:Processing video: movie1.mp4
-✅ INFO:core.batch_processor:Successfully processed: movie1.mp4
-❌ ERROR:core.batch_processor:Video processing failed: movie2.mp4: tensor reshape error
+INFO:core.batch_processor:Successfully processed: movie1.mp4
+ERROR:core.batch_processor:Video processing failed: movie2.mp4: tensor reshape error
 INFO:core.batch_processor:Continuing with next video after error
-✅ INFO:core.batch_processor:Successfully processed: movie3.mp4
+INFO:core.batch_processor:Successfully processed: movie3.mp4
 INFO:core.batch_processor:Batch processing completed
 ```
 

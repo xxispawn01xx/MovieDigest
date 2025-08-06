@@ -294,7 +294,7 @@ python -c "import torch; print(f'CUDA: {torch.cuda.is_available()}')"
 python -c "import torch; print(f'GPU: {torch.cuda.get_device_name(0)}')"
 
 # Environment will auto-detect RTX 3060 and apply optimizations
-# Check logs for: "🚀 RTX 3060 configuration loaded"
+# Check logs for: "RTX 3060 configuration loaded"
 ```
 
 **Batch Processing Errors**
