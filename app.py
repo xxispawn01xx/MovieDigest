@@ -109,7 +109,7 @@ def main():
     elif page == "Processing Queue":
         show_queue_page()
     elif page == "Batch Processing":
-        show_processing_page()
+        show_batch_processing_page()
     elif page == "Summary Results":
         show_results_page()
     elif page == "Export Center":
@@ -423,7 +423,7 @@ def show_queue_page():
     else:
         st.info("No videos pending processing")
 
-def show_processing_page():
+def show_batch_processing_page():
     """Display batch processing interface with real-time monitoring."""
     st.header("⚡ Batch Processing")
     
@@ -452,6 +452,9 @@ def show_processing_page():
     
     # Processing controls
     st.subheader("Processing Controls")
+    
+    # Debug info to help identify the issue
+    st.write(f"Debug: is_processing = {processing_status['is_processing']}, is_paused = {processing_status.get('is_paused', False)}")
     
     col1, col2, col3 = st.columns(3)
     

@@ -90,8 +90,10 @@ class BatchProcessor:
         }
         
         try:
-            # Discover videos
-            for metadata in self.discovery.scan_directory(root_directory, include_subdirs):
+            # Discover videos - convert generator to list to fix len() error
+            video_files = list(self.discovery.scan_directory(root_directory, include_subdirs))
+            
+            for metadata in video_files:
                 scan_results['discovered'] += 1
                 
                 try:
