@@ -10,6 +10,10 @@ import os
 import shutil
 from core.model_downloader import ModelDownloader
 
+# Add utils to path for importing
+sys.path.append(str(Path(__file__).parent.parent))
+from utils.windows_encoding_fix import fix_huggingface_cli_download
+
 def show_model_manager():
     """Display the enhanced model management interface with one-click downloads."""
     
@@ -172,25 +176,20 @@ def show_model_manager():
                         progress_bar.progress(10)
                         
                         try:
-                            # Use huggingface-cli to download
-                            cmd = ["huggingface-cli", "download", model['repo'], "--local-dir", "models/local_llm"]
-                            
+                            # Use improved Windows encoding fix for download
                             status_text.write("📥 Downloading model files...")
                             progress_bar.progress(30)
                             
-                            # Create directory if it doesn't exist
-                            Path("models/local_llm").mkdir(parents=True, exist_ok=True)
-                            
-                            result = subprocess.run(
-                                cmd,
-                                capture_output=True,
-                                text=True,
-                                timeout=1800  # 30 minute timeout
+                            # Use the encoding fix utility
+                            success, error_msg = fix_huggingface_cli_download(
+                                model['repo'], 
+                                "models/local_llm",
+                                timeout=1800
                             )
                             
                             progress_bar.progress(90)
                             
-                            if result.returncode == 0:
+                            if success:
                                 progress_bar.progress(100)
                                 status_text.write("✅ Download complete!")
                                 st.balloons()
@@ -203,7 +202,7 @@ def show_model_manager():
                                 st.rerun()
                             else:
                                 status_text.write("❌ Download failed")
-                                st.error(f"Failed to download {model['name']}. Error: {result.stderr}")
+                                st.error(f"Failed to download {model['name']}. Error: {error_msg}")
                                 
                         except subprocess.TimeoutExpired:
                             status_text.write("❌ Download timeout")
@@ -294,13 +293,18 @@ def show_model_manager():
                         cmd = ["huggingface-cli", "download", custom_model, "--local-dir", custom_dir]
                         Path(custom_dir).mkdir(parents=True, exist_ok=True)
                         
-                        result = subprocess.run(cmd, capture_output=True, text=True, timeout=1800)
+                        # Use improved encoding fix for custom model download
+                        success, error_msg = fix_huggingface_cli_download(
+                            custom_model,
+                            custom_dir,
+                            timeout=1800
+                        )
                         
-                        if result.returncode == 0:
+                        if success:
                             st.success(f"✅ Model {custom_model} downloaded successfully to {custom_dir}!")
                             st.rerun()
                         else:
-                            st.error(f"❌ Failed to download {custom_model}: {result.stderr}")
+                            st.error(f"❌ Failed to download {custom_model}: {error_msg}")
                     except Exception as e:
                         st.error(f"❌ Error downloading {custom_model}: {str(e)}")
     
