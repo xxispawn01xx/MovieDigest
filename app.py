@@ -93,7 +93,7 @@ def main():
         page = st.selectbox(
             "Choose a page:",
             ["Overview", "Video Discovery", "Plex Integration", "Advanced Analysis", "Processing Queue", "Batch Processing", 
-             "Summary Results", "Export Center", "Model Management", "System Status", "Settings", "Reprocessing"]
+             "Summary Results", "Export Center", "Model Management", "Email Marketing", "System Status", "Settings", "Reprocessing"]
         )
     
     # Route to selected page
@@ -117,6 +117,9 @@ def main():
     elif page == "Model Management":
         from pages.model_manager_enhanced import show_model_manager
         show_model_manager()
+    elif page == "Email Marketing":
+        from pages.email_outreach import main as show_email_marketing
+        show_email_marketing()
     elif page == "System Status":
         show_status_page()
     elif page == "Settings":

@@ -1,0 +1,42 @@
+email,first_name,last_name,title,company,industry_segment,authority_score,location,verified,source,notes
+development@netflix.com,Development,Team,Content Development,Netflix,Streaming Platform,95,Los Gatos CA,true,Direct,Major streaming platform
+acquisitions@hulu.com,Content,Acquisitions,Head of Acquisitions,Hulu,Streaming Platform,90,Los Angeles CA,true,Direct,Content acquisition team
+production@warnerbros.com,Production,Department,Production Executive,Warner Bros,Major Studio,95,Burbank CA,true,Direct,Major film studio
+development@universalstudios.com,Development,Executive,VP Development,Universal Studios,Major Studio,95,Universal City CA,true,Direct,Major studio development
+postproduction@paramountplus.com,Post,Production,Post-Production Manager,Paramount Pictures,Major Studio,85,Hollywood CA,true,Direct,Post-production facility
+content@disneyplus.com,Content,Strategy,Director Content Strategy,Disney Plus,Streaming Platform,90,Burbank CA,true,Direct,Streaming content strategy
+development@mgm.com,Creative,Development,Creative Executive,MGM Studios,Film Studio,80,Beverly Hills CA,true,Direct,Independent studio
+acquisitions@lionsgate.com,Film,Acquisitions,VP Film Acquisitions,Lionsgate,Film Studio,85,Santa Monica CA,true,Direct,Independent film acquisitions
+production@a24films.com,Production,Team,Producer,A24,Independent Studio,80,New York NY,true,Direct,Independent film production
+development@amazonstudios.com,Amazon,Studios,Head of Development,Amazon Studios,Streaming Platform,95,Culver City CA,true,Direct,Major streaming platform
+content@appletv.com,Apple,Original,Content Executive,Apple TV Plus,Streaming Platform,90,Cupertino CA,true,Direct,Tech streaming platform
+production@hbo.com,HBO,Production,Executive Producer,HBO,Premium Network,90,New York NY,true,Direct,Premium cable network
+development@showtime.com,Showtime,Development,Development Executive,Showtime,Premium Network,85,Los Angeles CA,true,Direct,Premium cable content
+acquisitions@starz.com,Content,Acquisition,Acquisitions Manager,Starz,Premium Network,80,Beverly Hills CA,true,Direct,Premium network acquisitions
+production@fx.com,FX,Productions,Production Manager,FX Networks,Cable Network,85,Los Angeles CA,true,Direct,Cable network production
+development@amc.com,AMC,Studios,Creative Executive,AMC Networks,Cable Network,80,New York NY,true,Direct,Cable network development
+content@peacocktv.com,Peacock,Content,Content Strategy Director,Peacock TV,Streaming Platform,85,Universal City CA,true,Direct,NBCUniversal streaming
+production@cbsfilms.com,CBS,Films,Production Executive,CBS Films,Network Studio,80,Studio City CA,true,Direct,Network film division
+development@sonytvpictures.com,Sony,Television,Development VP,Sony Pictures Television,Major Studio,90,Culver City CA,true,Direct,Major studio TV division
+acquisitions@focusfeatures.com,Focus,Features,Acquisitions Head,Focus Features,Specialty Studio,85,Los Angeles CA,true,Direct,Specialty film distributor
+production@bleeckerstreet.com,Bleecker,Street,Production Head,Bleecker Street,Independent Distributor,75,New York NY,true,Direct,Independent distribution
+development@neonrated.com,NEON,Development,Creative Executive,NEON,Independent Distributor,75,New York NY,true,Direct,Independent film distributor
+content@vicemedia.com,Vice,Studios,Content Director,Vice Media,Digital Media,80,Brooklyn NY,true,Direct,Digital content production
+production@buzzfeedstudios.com,BuzzFeed,Studios,Production Manager,BuzzFeed Studios,Digital Media,75,Los Angeles CA,true,Direct,Digital media production
+development@fullscreen.com,Fullscreen,Media,Development Executive,Fullscreen Media,Digital Platform,70,Los Angeles CA,true,Direct,Digital content platform
+acquisitions@ifc.com,IFC,Films,Acquisitions Director,IFC Films,Specialty Distributor,80,New York NY,true,Direct,Independent film distribution
+production@sundanceinst.org,Sundance,Institute,Program Director,Sundance Institute,Film Festival,85,Park City UT,true,Direct,Film festival organization
+development@tribecafilm.com,Tribeca,Enterprises,Content Executive,Tribeca Enterprises,Film Festival,80,New York NY,true,Direct,Film festival and production
+content@filmindependent.org,Film,Independent,Executive Director,Film Independent,Industry Organization,75,Los Angeles CA,true,Direct,Independent film support
+acquisitions@musicboxfilms.com,Music,Box,Acquisitions Head,Music Box Films,Specialty Distributor,70,Chicago IL,true,Direct,Independent film distributor
+production@oscilloscope.net,Oscilloscope,Laboratories,Production Executive,Oscilloscope Laboratories,Independent Distributor,70,New York NY,true,Direct,Independent production/distribution
+development@magnetreleasing.com,Magnet,Releasing,Development Head,Magnet Releasing,Genre Distributor,70,New York NY,true,Direct,Genre film distributor
+content@drafthouseonline.com,Drafthouse,Films,Content Curator,Drafthouse Films,Specialty Distributor,70,Austin TX,true,Direct,Specialty film distributor
+production@well.com,Well,Go,Production Manager,Well Go USA Entertainment,International Distributor,70,Plano TX,true,Direct,International film distribution
+acquisitions@kinolorber.com,Kino,Lorber,Acquisitions Director,Kino Lorber,Art House Distributor,75,New York NY,true,Direct,Art house and classic films
+development@cohenmedia.net,Cohen,Media,Development Executive,Cohen Media Group,Independent Distributor,70,New York NY,true,Direct,Independent film distribution
+content@filmmovement.com,Film,Movement,Content Director,Film Movement,Independent Distributor,70,New York NY,true,Direct,Independent and foreign films
+production@strand.com,Strand,Releasing,Production Head,Strand Releasing,Independent Distributor,70,Culver City CA,true,Direct,Independent LGBTQ+ films
+acquisitions@zeitgeistfilms.com,Zeitgeist,Films,Acquisitions Manager,Zeitgeist Films,Art House Distributor,70,New York NY,true,Direct,Art house and documentary
+development@kimstim.com,KimStim,Films,Development Executive,KimStim,Art House Distributor,65,New York NY,true,Direct,Art house distributor
+content@firstrunfeatures.com,First,Run,Content Director,First Run Features,Independent Distributor,65,New York NY,true,Direct,Independent documentary distributor
