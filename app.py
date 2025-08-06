@@ -24,7 +24,11 @@ from core.vlc_bookmarks import VLCBookmarkGenerator
 from core.plex_integration import PlexIntegration
 from utils.gpu_manager import GPUManager
 from utils.progress_tracker import ProgressTracker
+from utils.warning_suppressor import suppress_cuda_warnings
 import config
+
+# Initialize warning suppression early
+suppress_cuda_warnings()
 
 # Configure logging
 logging.basicConfig(level=logging.INFO)

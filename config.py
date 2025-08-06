@@ -23,6 +23,7 @@ SUBTITLE_FORMATS = ['.srt', '.vtt', '.ass', '.ssa']
 # GPU settings
 CUDA_DEVICE = "cuda:0" if os.getenv("CUDA_VISIBLE_DEVICES") else "cuda"
 MAX_GPU_MEMORY_GB = 10  # Reserve 2GB for system on RTX 3060 12GB
+FORCE_CPU_MODE = os.getenv("FORCE_CPU", "false").lower() == "true"  # Force CPU for compatibility
 
 # Scene detection settings
 SCENE_DETECTION_THRESHOLD = 30.0

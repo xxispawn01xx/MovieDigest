@@ -10,8 +10,13 @@ from pathlib import Path
 from typing import List, Dict, Optional
 import logging
 import json
+import warnings
 
 import config
+from utils.warning_suppressor import suppress_cuda_warnings
+
+# Suppress CUDA/Triton warnings for cleaner output
+suppress_cuda_warnings()
 
 logging.basicConfig(level=logging.INFO)
 logger = logging.getLogger(__name__)
@@ -21,11 +26,21 @@ class OfflineTranscriber:
     
     def __init__(self):
         """Initialize transcriber with GPU optimization."""
-        self.device = torch.device(config.CUDA_DEVICE if torch.cuda.is_available() else "cpu")
+        # Determine device with warning suppression
+        if config.FORCE_CPU_MODE:
+            self.device = torch.device("cpu")
+            device_info = "CPU (forced)"
+        elif torch.cuda.is_available():
+            self.device = torch.device(config.CUDA_DEVICE)
+            device_info = f"CUDA ({torch.cuda.get_device_name(0)})"
+        else:
+            self.device = torch.device("cpu")
+            device_info = "CPU (CUDA unavailable)"
+        
         self.model = None
         self.model_size = config.WHISPER_MODEL_SIZE
         
-        logger.info(f"Transcriber initialized on device: {self.device}")
+        logger.info(f"Transcriber initialized on device: {device_info}")
     
     def load_model(self, model_size: str = None) -> bool:
         """
