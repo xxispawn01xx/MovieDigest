@@ -1,4 +1,6 @@
-# Configuration Guide - Video Summarization Engine
+# Configuration Guide
+
+This document explains how to configure the Video Summarization Engine for different setups and requirements, including the new RTX 3060 automatic optimization system. - Video Summarization Engine
 
 ## Environment Variables
 

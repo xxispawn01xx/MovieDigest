@@ -6,11 +6,11 @@ An advanced offline GPU-accelerated application for processing movies and genera
 
 ### Core Capabilities
 - **Offline Processing**: Complete offline operation using local Whisper and LLM models
-- **GPU Acceleration**: CUDA-optimized processing for RTX 3060 and similar GPUs
-- **Intelligent Scene Detection**: Multi-algorithm scene boundary detection
-- **Audio Transcription**: OpenAI Whisper-powered speech-to-text
-- **Narrative Analysis**: Local LLM integration for story structure understanding
-- **Smart Summarization**: 5 different algorithms for optimal video compression
+- **RTX 3060 Optimization**: Smart environment detection with automatic GPU configuration and FP16 acceleration
+- **Intelligent Scene Detection**: Multi-algorithm scene boundary detection with GPU acceleration
+- **Audio Transcription**: OpenAI Whisper-powered speech-to-text with robust error handling
+- **Narrative Analysis**: Local LLM integration for story structure understanding with CPU fallback
+- **Smart Summarization**: 5 different algorithms for optimal video compression with batch processing
 
 ### Advanced Analysis
 - **Scene Characterization**: Visual complexity, motion analysis, and emotional content detection
@@ -85,10 +85,15 @@ utils/
 
 ### Prerequisites
 - Python 3.11 or higher
-- CUDA-compatible GPU (recommended: RTX 3060 12GB or better)
+- CUDA-compatible GPU (optimized for RTX 3060 12GB, auto-detects environment)
 - FFmpeg for video processing
 - 16GB+ RAM recommended
 - 50GB+ free disk space for models and processing
+
+### Environment Support
+- **RTX 3060 Local**: Full GPU optimization with large Whisper model, 85% VRAM usage, FP16 acceleration
+- **Generic CUDA**: Automatic detection with conservative memory settings
+- **CPU Fallback**: Replit cloud compatibility with CPU-only processing
 
 ### Quick Start
 1. **Clone and Install Dependencies**
@@ -98,13 +103,11 @@ utils/
    ```
    Dependencies are automatically managed by Replit's package system.
 
-2. **Configure GPU Settings**
-   Edit `config.py` to match your GPU:
-   ```python
-   # For RTX 3060 12GB
-   GPU_MEMORY_LIMIT_GB = 10
-   CUDA_DEVICE = 0
-   ```
+2. **Environment Detection**
+   The app automatically detects your environment:
+   - **RTX 3060**: Uses `config_rtx3060.py` with optimized settings
+   - **Other CUDA GPUs**: Uses standard configuration
+   - **CPU-only**: Fallback mode for development/testing
 
 3. **Download Whisper Models**
    Use the Model Management page in the web interface or manually:
@@ -220,16 +223,28 @@ base = "dark"
 ## Performance Optimization
 
 ### GPU Memory Management
-- **RTX 3060 12GB**: Set GPU_MEMORY_LIMIT_GB = 10
-- **RTX 4070 16GB**: Set GPU_MEMORY_LIMIT_GB = 14
-- **RTX 4090 24GB**: Set GPU_MEMORY_LIMIT_GB = 20
+- **RTX 3060 12GB**: Automatic 85% VRAM usage (11GB) with 1.9GB system reserve
+- **Generic CUDA**: Conservative 8GB limit with auto-detection
+- **CPU Mode**: No GPU memory usage for development environments
+
+### Batch Processing Resilience
+- **Error Recovery**: System continues processing remaining videos when individual files fail
+- **Tensor Error Handling**: Robust fallback for problematic audio files with reshape errors
+- **Audio Validation**: Prevents empty audio file failures with normalization
+- **Triton Warning Suppression**: Clean logs without cosmetic CUDA toolkit warnings
 
 ### Processing Recommendations
-- **Batch Size**: Start with 2 videos, increase if you have more VRAM
+- **RTX 3060 Batch Size**: Optimized for 3-4 videos simultaneously
 - **Whisper Models**: 
-  - `base` (39 params) - Good balance of speed and accuracy
-  - `small` (74M params) - Faster processing, lower accuracy
-  - `medium` (769M params) - Higher accuracy, slower processing
+  - **RTX 3060**: Uses `large` model automatically for best accuracy
+  - `base` (74M params) - Good balance for standard GPUs
+  - `small` (39M params) - Faster processing, lower accuracy
+  - `medium` (769M params) - Higher accuracy, moderate speed
+
+### Error Handling Improvements
+- **Transcription Fallback**: Automatic retry with simplified parameters for problematic files
+- **Audio Extraction**: Enhanced validation with volume normalization and time limits
+- **Memory Management**: Intelligent cleanup and garbage collection during batch processing
 
 ### Content-Specific Settings
 - **Action Films**: Use Audio-Visual Sync algorithm
@@ -271,6 +286,21 @@ base = "dark"
 ## Troubleshooting
 
 ### Common Issues
+
+**RTX 3060 Configuration Issues**
+```bash
+# Check CUDA installation
+python -c "import torch; print(f'CUDA: {torch.cuda.is_available()}')"
+python -c "import torch; print(f'GPU: {torch.cuda.get_device_name(0)}')"
+
+# Environment will auto-detect RTX 3060 and apply optimizations
+# Check logs for: "🚀 RTX 3060 configuration loaded"
+```
+
+**Batch Processing Errors**
+- **Tensor Reshape Errors**: Now handled automatically with fallback transcription
+- **Audio Extraction Failures**: Enhanced validation prevents empty file errors
+- **Memory Issues**: Automatic cleanup and conservative batch sizing
 
 **GPU Not Detected**
 ```bash
