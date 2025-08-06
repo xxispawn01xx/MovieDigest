@@ -61,48 +61,48 @@ def show_model_manager():
     
     recommended_models = [
         {
-            "name": "Microsoft DialoGPT-medium",
-            "repo": "microsoft/DialoGPT-medium", 
-            "size": "1.2 GB",
-            "description": "🎬 Best for movie analysis - specializes in dialogue and character interactions",
-            "use_case": "Dialogue-heavy movies, character studies, drama",
+            "name": "Mistral-7B-Instruct-v0.2",
+            "repo": "mistralai/Mistral-7B-Instruct-v0.2", 
+            "size": "14 GB",
+            "description": "🚀 Top choice - uncensored, excellent for creative content and movie analysis",
+            "use_case": "All movie types, uncensored analysis, complex narratives",
+            "speed": "Fast",
+            "quality": "Excellent",
+            "recommended": True,
+            "command": "huggingface-cli download mistralai/Mistral-7B-Instruct-v0.2 --local-dir models/local_llm"
+        },
+        {
+            "name": "Mistral-7B-v0.1 (Base)",
+            "repo": "mistralai/Mistral-7B-v0.1",
+            "size": "13 GB", 
+            "description": "🎯 Uncensored base model - excellent for creative analysis",
+            "use_case": "Creative content, unrestricted analysis, all genres",
             "speed": "Fast",
             "quality": "High",
-            "recommended": True,
-            "command": "huggingface-cli download microsoft/DialoGPT-medium --local-dir models/local_llm"
-        },
-        {
-            "name": "GPT2-medium",
-            "repo": "gpt2-medium",
-            "size": "1.5 GB", 
-            "description": "🎯 General purpose - excellent for action movies and documentaries",
-            "use_case": "Action movies, documentaries, varied content",
-            "speed": "Medium",
-            "quality": "High",
             "recommended": False,
-            "command": "huggingface-cli download gpt2-medium --local-dir models/local_llm"
+            "command": "huggingface-cli download mistralai/Mistral-7B-v0.1 --local-dir models/local_llm"
         },
         {
-            "name": "DistilGPT2 (Lightweight)",
-            "repo": "distilgpt2",
-            "size": "320 MB",
-            "description": "⚡ Ultra-fast - perfect for testing and batch processing",
-            "use_case": "Testing, batch processing, quick analysis",
+            "name": "OpenChat-3.5 (Lightweight)",
+            "repo": "openchat/openchat-3.5-0106",
+            "size": "7 GB",
+            "description": "⚡ Faster alternative - less censored than traditional models",
+            "use_case": "Quick analysis, batch processing, testing",
             "speed": "Very Fast",
             "quality": "Good", 
             "recommended": False,
-            "command": "huggingface-cli download distilgpt2 --local-dir models/local_llm"
+            "command": "huggingface-cli download openchat/openchat-3.5-0106 --local-dir models/local_llm"
         },
         {
-            "name": "DialoGPT-large (Premium)",
-            "repo": "microsoft/DialoGPT-large", 
-            "size": "3.0 GB",
-            "description": "🏆 Maximum quality - best results for complex narratives",
-            "use_case": "Complex plots, ensemble casts, premium analysis",
-            "speed": "Slower",
-            "quality": "Excellent",
+            "name": "Code Llama-7B-Instruct",
+            "repo": "codellama/CodeLlama-7b-Instruct-hf", 
+            "size": "13 GB",
+            "description": "🔧 Technical analysis - great for documentaries and technical content",
+            "use_case": "Documentaries, technical content, structured analysis",
+            "speed": "Medium",
+            "quality": "High",
             "recommended": False,
-            "command": "huggingface-cli download microsoft/DialoGPT-large --local-dir models/local_llm"
+            "command": "huggingface-cli download codellama/CodeLlama-7b-Instruct-hf --local-dir models/local_llm"
         }
     ]
     
@@ -352,30 +352,31 @@ def show_model_manager():
         st.markdown("""
         ### 🎯 Recommended Setup for Video Summarization:
         
-        1. **🎬 For Movie Analysis (Recommended):**
-           - Click **"🚀 One-Click Install"** for **Microsoft DialoGPT-medium**
-           - This model excels at understanding dialogue and character interactions
-           - Size: 1.2GB - good balance of quality and speed
+        1. **🚀 For Uncensored Movie Analysis (Recommended):**
+           - Click **"🚀 One-Click Install"** for **Mistral-7B-Instruct-v0.2**
+           - Less censored than traditional models, excellent for all content types
+           - Size: 14GB - requires good GPU or will run slower on CPU
         
         2. **🎤 For Speech Recognition:**
            - Install **Whisper Base** (142 MB) for general use
            - Or **Whisper Medium** (1.5 GB) for better quality
         
         3. **⚡ For Quick Testing:**
-           - Install **DistilGPT2** (320 MB) for fast processing
-           - Good for testing the system before using larger models
+           - Install **OpenChat-3.5** (7GB) for faster uncensored analysis
+           - Good balance of speed and uncensored capabilities
         
         ### 💡 Tips:
-        - **GPU Users:** Can handle larger models (Medium/Large)
-        - **CPU Users:** Stick with smaller models (Base/Small)
-        - **Storage:** Ensure you have enough space before downloading
-        - **Internet:** Large models may take time to download
+        - **High-end GPU:** Use Mistral-7B models for best uncensored analysis
+        - **Mid-range GPU:** Try OpenChat-3.5 for faster processing
+        - **CPU Users:** Consider smaller models but expect slower performance
+        - **Storage:** Mistral models are larger but provide better uncensored analysis
+        - **Content:** Mistral handles mature/adult content better than censored models
         
-        ### 📋 The Command You Requested:
+        ### 📋 Updated Command for Mistral:
         ```bash
-        huggingface-cli download microsoft/DialoGPT-medium --local-dir models/local_llm
+        huggingface-cli download mistralai/Mistral-7B-Instruct-v0.2 --local-dir models/local_llm
         ```
-        This is now available as a one-click button above!
+        This replaces the previous DialoGPT command with the superior uncensored option!
         """)
     
     # System Requirements Check

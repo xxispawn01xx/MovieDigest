@@ -5,11 +5,12 @@ The Video Summarization Engine is an offline, GPU-accelerated application for pr
 # User Preferences
 
 Preferred communication style: Simple, everyday language.
+Preferred LLM models: Mistral (uncensored) over traditional models like DialoGPT.
 
 # Recent Changes
 
 ## Latest Updates (Aug 6, 2025)
-- **One-Click LLM Model Downloads**: Created enhanced Model Management interface with one-click installation buttons for recommended models like Microsoft DialoGPT-medium, including progress tracking, system requirements checking, and the exact huggingface-cli commands integrated as clickable buttons
+- **One-Click LLM Model Downloads**: Created enhanced Model Management interface with one-click installation buttons for recommended models like Mistral-7B-Instruct (uncensored), including progress tracking, system requirements checking, and the exact huggingface-cli commands integrated as clickable buttons
 - **Audio Track & Subtitle Selection System**: Implemented comprehensive MediaTrackSelector that automatically detects and selects optimal audio tracks (default/English/most channels priority) and subtitles (SRT, VTT, ASS, SSA) from video files during processing
 - **Enhanced Video Processing**: Updated transcription and summarization to use selected audio tracks, fixing issues where users couldn't access multiple audio streams or subtitle tracks from original videos
 - **Streamlit Navigation Fix**: Fixed problematic st.switch_page calls causing navigation errors by properly structuring pages directory and using correct page routing
