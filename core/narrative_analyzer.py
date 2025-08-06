@@ -55,7 +55,7 @@ except ImportError:
     def pipeline(*args, **kwargs):
         return DummyPipeline(*args, **kwargs)
 
-import config
+from config_detector import CONFIG as config, ENVIRONMENT
 
 logging.basicConfig(level=logging.INFO)
 logger = logging.getLogger(__name__)
@@ -65,7 +65,12 @@ class NarrativeAnalyzer:
     
     def __init__(self):
         """Initialize narrative analyzer with local LLM."""
-        self.device = torch.device(config.CUDA_DEVICE if torch.cuda.is_available() else "cpu")
+        if ENVIRONMENT == "rtx_3060_local":
+            self.device = torch.device(config.CUDA_DEVICE)  # RTX 3060
+        elif torch.cuda.is_available():
+            self.device = torch.device("cuda")  # Generic CUDA
+        else:
+            self.device = torch.device("cpu")  # CPU fallback
         self.model = None
         self.tokenizer = None
         self.generator = None

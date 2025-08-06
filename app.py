@@ -25,7 +25,7 @@ from core.plex_integration import PlexIntegration
 from utils.gpu_manager import GPUManager
 from utils.progress_tracker import ProgressTracker
 from utils.warning_suppressor import suppress_cuda_warnings
-import config
+from config_detector import CONFIG as config, ENVIRONMENT
 
 # Initialize warning suppression early
 suppress_cuda_warnings()

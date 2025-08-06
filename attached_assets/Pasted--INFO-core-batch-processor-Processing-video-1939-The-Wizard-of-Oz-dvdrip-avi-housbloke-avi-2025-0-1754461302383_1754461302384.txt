@@ -1,0 +1,222 @@
+
+INFO:core.batch_processor:Processing video: 1939.The.Wizard.of.Oz.dvdrip.avi.housbloke.avi
+2025-08-05 14:10:23.802 Thread 'Thread-553 (_process_batch_worker)': missing ScriptRunContext! This warning can be ignored when running in bare mode.
+2025-08-05 14:10:23.802 Thread 'Thread-553 (_process_batch_worker)': missing ScriptRunContext! This warning can be ignored when running in bare mode.
+2025-08-05 14:10:23.802 Thread 'Thread-553 (_process_batch_worker)': missing ScriptRunContext! This warning can be ignored when running in bare mode.
+2025-08-05 14:10:23.802 Thread 'Thread-553 (_process_batch_worker)': missing ScriptRunContext! This warning can be ignored when running in bare mode.
+INFO:core.scene_detector:Starting scene detection for: 1939.The.Wizard.of.Oz.dvdrip.avi.housbloke.avi
+INFO:core.scene_detector:Using method: auto
+  Detected: 0 | Progress:   0%|          | 0/183070 [00:00<?, ?frames/s]INFO:pyscenedetect:Detecting scenes...
+  Detected: 2 | Progress:   2%|1         | 2910/183070 [00:03<03:48, 788.11frames/s]INFO:core.database:Cleared 1 videos from queue
+  Detected: 108 | Progress:  17%|#6        | 30469/183070 [00:39<03:01, 841.66frames/s]INFO:core.batch_processor:Stopping batch processing...
+  Detected: 111 | Progress:  17%|#7        | 31276/183070 [00:41<03:14, 782.44frames/s]INFO:core.batch_processor:Loaded 2 queued videos into processing queue
+INFO:core.batch_processor:Processing batch of 2 videos
+INFO:core.batch_processor:Batch processing started with batch size: 2
+INFO:core.batch_processor:Processing video: ssf-tchaser-cd2.avi
+  Detected: 111 | Progress:  17%|#7        | 31444/183070 [00:41<04:20, 582.33frames/s]2025-08-05 14:11:05.682 Thread 'Thread-556 (_process_batch_worker)': missing ScriptRunContext! This warning can be ignored when running in bare mode.
+2025-08-05 14:11:05.683 Thread 'Thread-556 (_process_batch_worker)': missing ScriptRunContext! This warning can be ignored when running in bare mode.
+INFO:core.scene_detector:Starting scene detection for: ssf-tchaser-cd2.avi
+INFO:core.scene_detector:Using method: auto
+                                                                       INFO:pyscenedetect:Detecting scenes...
+  Detected: 1826 | Progress: 100%|##########| 85510/85510 [02:19<00:00, 615.09frames/s]
+  Detected: 1172 | Progress:  86%|########6 | 157980/183070 [04:55<00:34, 717.01frames/s]INFO:core.scene_detector:Filtered 452 short scenes
+INFO:core.scene_detector:Detected 656 scenes
+  Detected: 1178 | Progress:  86%|########6 | 158339/183070 [04:55<00:28, 861.54frames/s]2025-08-05 14:15:19.537 Thread 'Thread-556 (_process_batch_worker)': missing ScriptRunContext! This warning can be ignored when running in bare mode.
+2025-08-05 14:15:19.537 Thread 'Thread-556 (_process_batch_worker)': missing ScriptRunContext! This warning can be ignored when running in bare mode.
+INFO:core.transcription:Loading Whisper model: base
+  Detected: 1190 | Progress:  87%|########6 | 159194/183070 [04:57<00:47, 497.92frames/s]INFO:core.transcription:Model loaded successfully on cuda
+INFO:core.transcription:Starting transcription for: ssf-tchaser-cd2.avi
+  Detected: 1229 | Progress:  90%|########9 | 164367/183070 [05:06<00:34, 544.44frames/s]INFO:core.transcription:Audio extracted to: H:\MovieDigest\temp\ssf-tchaser-cd2_audio.wav
+  Detected: 1255 | Progress:  91%|#########1| 166977/183070 [05:13<00:35, 459.79frames/s]C:\Program Files\Python312\Lib\site-packages\whisper\timing.py:42: UserWarning: Failed to launch Triton kernels, likely due to missing CUDA toolkit; falling back to a slower median kernel implementation...
+  warnings.warn(
+  Detected: 1255 | Progress:  91%|#########1| 167024/183070 [05:13<00:35, 453.84frames/s]C:\Program Files\Python312\Lib\site-packages\whisper\timing.py:146: UserWarning: Failed to launch Triton kernels, likely due to missing CUDA toolkit; falling back to a slower DTW implementation...
+  warnings.warn(
+  Detected: 1286 | Progress:  94%|#########4| 172734/183070 [05:30<00:40, 255.99frames/s]C:\Program Files\Python312\Lib\site-packages\whisper\timing.py:42: UserWarning: Failed to launch Triton kernels, likely due to missing CUDA toolkit; falling back to a slower median kernel implementation...
+  warnings.warn(
+C:\Program Files\Python312\Lib\site-packages\whisper\timing.py:146: UserWarning: Failed to launch Triton kernels, likely due to missing CUDA toolkit; falling back to a slower DTW implementation...
+  warnings.warn(
+  Detected: 1322 | Progress: 100%|#########9| 182853/183070 [05:56<00:00, 512.33frames/s]
+  8%|7         | 25914/341667 [00:37<07:51, 669.76frames/s] INFO:core.scene_detector:Filtered 141 short scenes
+INFO:core.scene_detector:Detected 570 scenes 516.43frames/s]
+2025-08-05 14:18:10.222 Thread 'Thread-553 (_process_batch_worker)': missing ScriptRunContext! This warning can be ignored when running in bare mode.
+2025-08-05 14:18:10.222 Thread 'Thread-553 (_process_batch_worker)': missing ScriptRunContext! This warning can be ignored when running in bare mode.
+INFO:core.transcription:Starting transcription for: 1939.The.Wizard.of.Oz.dvdrip.avi.housbloke.avi
+                                                            INFO:core.transcription:Audio extracted to: H:\MovieDigest\temp\1939.The.Wizard.of.Oz.dvdrip.avi.housbloke_audio.wav
+  0%|          | 0/610847 [00:00<?, ?frames/s]44.65frames/s]
+ERROR:core.transcription:Transcription failed for H:\Movies\1939.The.Wizard.of.Oz.dvdrip.avi.housbloke.avi: cannot reshape tensor of 0 elements into shape [1, 0, 8, -1] because the unspecified dimension size -1 can be any value and is ambiguous
+ERROR:core.batch_processor:Video processing failed: H:\Movies\1939.The.Wizard.of.Oz.dvdrip.avi.housbloke.avi: cannot reshape tensor of 0 elements into shape [1, 0, 8, -1] because the unspecified dimension size -1 can be any value and is ambiguous
+INFO:core.batch_processor:Continuing with next video after error in H:\Movies\1939.The.Wizard.of.Oz.dvdrip.avi.housbloke.avi
+2025-08-05 14:18:21.184 Thread 'Thread-553 (_process_batch_worker)': missing ScriptRunContext! This warning can be ignored when running in bare mode.
+2025-08-05 14:18:21.184 Thread 'Thread-553 (_process_batch_worker)': missing ScriptRunContext! This warning can be ignored when running in bare mode.
+2025-08-05 14:18:21.184 Thread 'Thread-553 (_process_batch_worker)': missing ScriptRunContext! This warning can be ignored when running in bare mode.
+2025-08-05 14:18:21.184 Thread 'Thread-553 (_process_batch_worker)': missing ScriptRunContext! This warning can be ignored when running in bare mode.
+INFO:core.batch_processor:Processing video: A little princess.avi
+2025-08-05 14:18:21.690 Thread 'Thread-553 (_process_batch_worker)': missing ScriptRunContext! This warning can be ignored when running in bare mode.
+2025-08-05 14:18:21.690 Thread 'Thread-553 (_process_batch_worker)': missing ScriptRunContext! This warning can be ignored when running in bare mode.
+INFO:core.scene_detector:Starting scene detection for: A little princess.avi
+INFO:core.scene_detector:Using method: auto
+  Detected: 0 | Progress:   0%|          | 0/140034 [00:00<?, ?frames/s]INFO:pyscenedetect:Detecting scenes...
+ 86%|########5 | 293667/341667 [06:28<01:03, 756.57frames/s] 3:40<03:40, 245.05frames/s]
+  Detected: 1177 | Progress:  61%|######1   | 85968/140034 [03:40<03:37, 249.03frames/s]INFO:core.transcription:Transcription completed: 630 segments
+  Detected: 1177 | Progress:  61%|######1   | 86030/140034 [03:40<03:15, 276.07frames/s]2025-08-05 14:22:02.178 Thread 'Thread-556 (_process_batch_worker)': missing ScriptRunContext! This warning can be ignored when running in bare mode.
+2025-08-05 14:22:02.178 Thread 'Thread-556 (_process_batch_worker)': missing ScriptRunContext! This warning can be ignored when running in bare mode.
+INFO:core.scene_detector:Calculating scene importance scores
+  Detected: 1177 | Progress:  61%|######1   | 86098/140034 [03:40<03:09, 284.61frames/s]2025-08-05 14:22:02.367 Thread 'Thread-556 (_process_batch_worker)': missing ScriptRunContext! This warning can be ignored when running in bare mode.
+2025-08-05 14:22:02.367 Thread 'Thread-556 (_process_batch_worker)': missing ScriptRunContext! This warning can be ignored when running in bare mode.
+ERROR:core.narrative_analyzer:Model path does not exist: H:\MovieDigest\models\local_llm
+INFO:core.narrative_analyzer:Please place your local LLM model in the 'models/local_llm' directory
+WARNING:core.narrative_analyzer:Failed to load LLM - falling back to basic analysis
+INFO:core.narrative_analyzer:Using basic narrative analysis (no LLM)
+INFO:core.narrative_analyzer:Calculating narrative importance scores
+  Detected: 1177 | Progress:  62%|######1   | 86152/140034 [03:40<02:33, 350.84frames/s]2025-08-05 14:22:02.478 Thread 'Thread-556 (_process_batch_worker)': missing ScriptRunContext! This warning can be ignored when running in bare mode.
+2025-08-05 14:22:02.478 Thread 'Thread-556 (_process_batch_worker)': missing ScriptRunContext! This warning can be ignored when running in bare mode.
+INFO:core.summarizer:Creating summary for: ssf-tchaser-cd2.avi
+  Detected: 1179 | Progress:  62%|######1   | 86204/140034 [03:40<02:16, 395.61frames/s]INFO:core.summarizer:Target summary duration: 8.6 minutes
+INFO:core.summarizer:Selecting scenes for 8.6 minute summary
+INFO:core.summarizer:Selected 39 scenes totaling 8.6 minutes
+INFO:core.summarizer:Creating video summary: ssf-tchaser-cd2_summary_20250805_142202.mp4
+  Detected: 1499 | Progress:  76%|#######5  | 106091/140034 [04:34<01:33, 364.49frames/s]INFO:core.summarizer:Video summary created: H:\MovieDigest\output\summaries\ssf-tchaser-cd2_summary_20250805_142202.mp4
+INFO:core.summarizer:Creating VLC bookmarks: ssf-tchaser-cd2_bookmarks_20250805_142256.xspf
+INFO:core.summarizer:VLC bookmarks created: H:\MovieDigest\output\bookmarks\ssf-tchaser-cd2_bookmarks_20250805_142256.xspf
+INFO:core.summarizer:Summary created: 8.6min (15.1% compression)
+  Detected: 1499 | Progress:  76%|#######5  | 106137/140034 [04:34<01:27, 388.54frames/s]2025-08-05 14:22:56.422 Thread 'Thread-556 (_process_batch_worker)': missing ScriptRunContext! This warning can be ignored when running in bare mode.
+2025-08-05 14:22:56.422 Thread 'Thread-556 (_process_batch_worker)': missing ScriptRunContext! This warning can be ignored when running in bare mode.
+INFO:core.validation:Calculating F1-score validation metrics
+INFO:core.validation:Generated synthetic ground truth: 8 important scenes
+INFO:core.validation:Validation metrics: F1=0.242, P=0.138, R=1.000
+  Detected: 1505 | Progress:  76%|#######6  | 106666/140034 [04:35<01:04, 521.34frames/s]2025-08-05 14:22:57.445 Thread 'Thread-556 (_process_batch_worker)': missing ScriptRunContext! This warning can be ignored when running in bare mode.
+2025-08-05 14:22:57.445 Thread 'Thread-556 (_process_batch_worker)': missing ScriptRunContext! This warning can be ignored when running in bare mode.
+INFO:core.batch_processor:Successfully processed: ssf-tchaser-cd2.avi
+2025-08-05 14:22:57.446 Thread 'Thread-556 (_process_batch_worker)': missing ScriptRunContext! This warning can be ignored when running in bare mode.
+2025-08-05 14:22:57.446 Thread 'Thread-556 (_process_batch_worker)': missing ScriptRunContext! This warning can be ignored when running in bare mode.
+INFO:core.batch_processor:Processing video: 08-The Fate Of Rengoku.avi
+  Detected: 1507 | Progress:  76%|#######6  | 106778/140034 [04:35<01:01, 536.55frames/s]2025-08-05 14:22:57.656 Thread 'Thread-556 (_process_batch_worker)': missing ScriptRunContext! This warning can be ignored when running in bare mode.
+2025-08-05 14:22:57.657 Thread 'Thread-556 (_process_batch_worker)': missing ScriptRunContext! This warning can be ignored when running in bare mode.
+INFO:core.scene_detector:Starting scene detection for: 08-The Fate Of Rengoku.avi
+INFO:core.scene_detector:Using method: auto
+  Detected: 1507 | Progress:  76%|#######6  | 106832/140034 [04:35<01:0INFO:pyscenedetect:Detecting scenes...
+  Detected: 2152 | Progress: 100%|#########9| 140033/140034 [06:18<00:00, 370.27frames/s]
+  Detected: 656 | Progress: 100%|##########| 43215/43215 [01:55<00:00, 374.04frames/s]
+INFO:core.scene_detector:Filtered 170 short scenes/43215 [01:55<00:00, 605.34frames/s]
+INFO:core.scene_detector:Detected 235 scenes
+2025-08-05 14:25:45.953 Thread 'Thread-556 (_process_batch_worker)': missing ScriptRunContext! This warning can be ignored when running in bare mode.
+2025-08-05 14:25:45.953 Thread 'Thread-556 (_process_batch_worker)': missing ScriptRunContext! This warning can be ignored when running in bare mode.
+INFO:core.transcription:Starting transcription for: 08-The Fate Of Rengoku.avi
+INFO:core.transcription:Audio extracted to: H:\MovieDigest\temp\08-The Fate Of Rengoku_audio.wav
+  0%|          | 0/144194 [00:00<?, ?frames/s]C:\Program Files\Python312\Lib\site-packages\whisper\timing.py:42: UserWarning: Failed to launch Triton kernels, likely due to missing CUDA toolkit; falling back to a slower median kernel implementation...
+  warnings.warn(
+C:\Program Files\Python312\Lib\site-packages\whisper\timing.py:146: UserWarning: Failed to launch Triton kernels, likely due to missing CUDA toolkit; falling back to a slower DTW implementation...
+  warnings.warn(
+ 83%|########3 | 120194/144194 [01:00<00:12, 1975.44frames/s]
+INFO:core.transcription:Transcription completed: 180 segments
+2025-08-05 14:26:49.901 Thread 'Thread-556 (_process_batch_worker)': missing ScriptRunContext! This warning can be ignored when running in bare mode.
+2025-08-05 14:26:49.901 Thread 'Thread-556 (_process_batch_worker)': missing ScriptRunContext! This warning can be ignored when running in bare mode.
+INFO:core.scene_detector:Calculating scene importance scores
+2025-08-05 14:26:50.088 Thread 'Thread-556 (_process_batch_worker)': missing ScriptRunContext! This warning can be ignored when running in bare mode.
+2025-08-05 14:26:50.088 Thread 'Thread-556 (_process_batch_worker)': missing ScriptRunContext! This warning can be ignored when running in bare mode.
+ERROR:core.narrative_analyzer:Model path does not exist: H:\MovieDigest\models\local_llm
+INFO:core.narrative_analyzer:Please place your local LLM model in the 'models/local_llm' directory
+WARNING:core.narrative_analyzer:Failed to load LLM - falling back to basic analysis
+INFO:core.narrative_analyzer:Using basic narrative analysis (no LLM)
+INFO:core.narrative_analyzer:Calculating narrative importance scores
+2025-08-05 14:26:50.234 Thread 'Thread-556 (_process_batch_worker)': missing ScriptRunContext! This warning can be ignored when running in bare mode.
+2025-08-05 14:26:50.234 Thread 'Thread-556 (_process_batch_worker)': missing ScriptRunContext! This warning can be ignored when running in bare mode.
+INFO:core.summarizer:Creating summary for: 08-The Fate Of Rengoku.avi
+INFO:core.summarizer:Target summary duration: 3.6 minutes
+INFO:core.summarizer:Selecting scenes for 3.6 minute summary
+INFO:core.summarizer:Selected 19 scenes totaling 3.6 minutes
+INFO:core.summarizer:Creating video summary: 08-The Fate Of Rengoku_summary_20250805_142650.mp4
+INFO:core.summarizer:Video summary created: H:\MovieDigest\output\summaries\08-The Fate Of Rengoku_summary_20250805_142650.mp4
+INFO:core.summarizer:Creating VLC bookmarks: 08-The Fate Of Rengoku_bookmarks_20250805_142711.xspf
+INFO:core.summarizer:VLC bookmarks created: H:\MovieDigest\output\bookmarks\08-The Fate Of Rengoku_bookmarks_20250805_142711.xspf
+INFO:core.summarizer:Summary created: 3.7min (15.5% compression)
+2025-08-05 14:27:11.345 Thread 'Thread-556 (_process_batch_worker)': missing ScriptRunContext! This warning can be ignored when running in bare mode.
+2025-08-05 14:27:11.345 Thread 'Thread-556 (_process_batch_worker)': missing ScriptRunContext! This warning can be ignored when running in bare mode.
+INFO:core.validation:Calculating F1-score validation metrics
+INFO:core.validation:Generated synthetic ground truth: 3 important scenes
+INFO:core.validation:Validation metrics: F1=0.272, P=0.157, R=1.000
+2025-08-05 14:27:12.511 Thread 'Thread-556 (_process_batch_worker)': missing ScriptRunContext! This warning can be ignored when running in bare mode.
+2025-08-05 14:27:12.511 Thread 'Thread-556 (_process_batch_worker)': missing ScriptRunContext! This warning can be ignored when running in bare mode.
+INFO:core.batch_processor:Successfully processed: 08-The Fate Of Rengoku.avi
+2025-08-05 14:27:12.512 Thread 'Thread-556 (_process_batch_worker)': missing ScriptRunContext! This warning can be ignored when running in bare mode.
+2025-08-05 14:27:12.512 Thread 'Thread-556 (_process_batch_worker)': missing ScriptRunContext! This warning can be ignored when running in bare mode.
+INFO:core.batch_processor:Batch processing completed
+INFO:core.scene_detector:Filtered 699 short scenes
+INFO:core.scene_detector:Detected 801 scenes
+2025-08-05 14:27:54.404 Thread 'Thread-553 (_process_batch_worker)': missing ScriptRunContext! This warning can be ignored when running in bare mode.
+2025-08-05 14:27:54.404 Thread 'Thread-553 (_process_batch_worker)': missing ScriptRunContext! This warning can be ignored when running in bare mode.
+INFO:core.transcription:Starting transcription for: A little princess.avi
+INFO:core.transcription:Audio extracted to: H:\MovieDigest\temp\A little princess_audio.wav
+  0%|          | 0/560124 [00:00<?, ?frames/s]C:\Program Files\Python312\Lib\site-packages\whisper\timing.py:42: UserWarning: Failed to launch Triton kernels, likely due to missing CUDA toolkit; falling back to a slower median kernel implementation...
+  warnings.warn(
+C:\Program Files\Python312\Lib\site-packages\whisper\timing.py:146: UserWarning: Failed to launch Triton kernels, likely due to missing CUDA toolkit; falling back to a slower DTW implementation...
+  warnings.warn(
+ 97%|#########6| 542124/560124 [03:28<00:06, 2595.14frames/s]
+INFO:core.transcription:Transcription completed: 1094 segments
+2025-08-05 14:31:31.813 Thread 'Thread-553 (_process_batch_worker)': missing ScriptRunContext! This warning can be ignored when running in bare mode.
+2025-08-05 14:31:31.813 Thread 'Thread-553 (_process_batch_worker)': missing ScriptRunContext! This warning can be ignored when running in bare mode.
+INFO:core.scene_detector:Calculating scene importance scores
+2025-08-05 14:31:31.990 Thread 'Thread-553 (_process_batch_worker)': missing ScriptRunContext! This warning can be ignored when running in bare mode.
+2025-08-05 14:31:31.990 Thread 'Thread-553 (_process_batch_worker)': missing ScriptRunContext! This warning can be ignored when running in bare mode.
+ERROR:core.narrative_analyzer:Model path does not exist: H:\MovieDigest\models\local_llm
+INFO:core.narrative_analyzer:Please place your local LLM model in the 'models/local_llm' directory
+WARNING:core.narrative_analyzer:Failed to load LLM - falling back to basic analysis
+INFO:core.narrative_analyzer:Using basic narrative analysis (no LLM)
+INFO:core.narrative_analyzer:Calculating narrative importance scores
+2025-08-05 14:31:32.180 Thread 'Thread-553 (_process_batch_worker)': missing ScriptRunContext! This warning can be ignored when running in bare mode.
+2025-08-05 14:31:32.180 Thread 'Thread-553 (_process_batch_worker)': missing ScriptRunContext! This warning can be ignored when running in bare mode.
+INFO:core.summarizer:Creating summary for: A little princess.avi
+INFO:core.summarizer:Target summary duration: 14.0 minutes
+INFO:core.summarizer:Selecting scenes for 14.0 minute summary
+INFO:core.summarizer:Selected 68 scenes totaling 14.0 minutes
+INFO:core.summarizer:Creating video summary: A little princess_summary_20250805_143132.mp4
+INFO:core.summarizer:Video summary created: H:\MovieDigest\output\summaries\A little princess_summary_20250805_143132.mp4
+INFO:core.summarizer:Creating VLC bookmarks: A little princess_bookmarks_20250805_143256.xspf
+INFO:core.summarizer:VLC bookmarks created: H:\MovieDigest\output\bookmarks\A little princess_bookmarks_20250805_143256.xspf
+INFO:core.summarizer:Summary created: 14.1min (15.1% compression)
+2025-08-05 14:32:56.171 Thread 'Thread-553 (_process_batch_worker)': missing ScriptRunContext! This warning can be ignored when running in bare mode.
+2025-08-05 14:32:56.171 Thread 'Thread-553 (_process_batch_worker)': missing ScriptRunContext! This warning can be ignored when running in bare mode.
+INFO:core.validation:Calculating F1-score validation metrics
+INFO:core.validation:Generated synthetic ground truth: 10 important scenes
+INFO:core.validation:Validation metrics: F1=0.281, P=0.164, R=1.000
+2025-08-05 14:32:57.304 Thread 'Thread-553 (_process_batch_worker)': missing ScriptRunContext! This warning can be ignored when running in bare mode.
+2025-08-05 14:32:57.304 Thread 'Thread-553 (_process_batch_worker)': missing ScriptRunContext! This warning can be ignored when running in bare mode.
+INFO:core.batch_processor:Successfully processed: A little princess.avi
+2025-08-05 14:32:57.305 Thread 'Thread-553 (_process_batch_worker)': missing ScriptRunContext! This warning can be ignored when running in bare mode.
+2025-08-05 14:32:57.305 Thread 'Thread-553 (_process_batch_worker)': missing ScriptRunContext! This warning can be ignored when running in bare mode.
+INFO:core.batch_processor:Batch processing completed
+INFO:core.transcription:Transcriber initialized on device: cuda
+INFO:core.narrative_analyzer:Narrative analyzer initialized on device: cuda
+INFO:utils.gpu_manager:GPU Manager initialized - CUDA available: True
+INFO:utils.gpu_manager:Primary device: cuda
+INFO:utils.gpu_manager:Available GPUs: 1
+INFO:utils.progress_tracker:Progress tracker update thread started
+INFO:core.batch_processor:Batch size set to: 4
+INFO:core.batch_processor:Loaded 22 queued videos into processing queue
+INFO:core.batch_processor:Processing batch of 4 videos
+INFO:core.batch_processor:Processing video: ssf-tchaser-cd2.avi
+INFO:core.batch_processor:Batch processing started with batch size: 4
+2025-08-06 02:08:04.837 Thread 'Thread-592 (_process_batch_worker)': missing ScriptRunContext! This warning can be ignored when running in bare mode.
+2025-08-06 02:08:04.837 Thread 'Thread-592 (_process_batch_worker)': missing ScriptRunContext! This warning can be ignored when running in bare mode.
+INFO:core.scene_detector:Starting scene detection for: ssf-tchaser-cd2.avi
+INFO:core.scene_detector:Using method: auto
+  Detected: 0 | Progress:   0%|          | 0/85510 [00:00<?, ?frames/s]INFO:pyscenedetect:Detecting scenes...
+  Detected: 1826 | Progress: 100%|##########| 85510/85510 [01:41<00:00, 840.18frames/s]
+INFO:core.scene_detector:Filtered 452 short scenes
+INFO:core.scene_detector:Detected 656 scenes
+2025-08-06 02:11:08.189 Thread 'Thread-592 (_process_batch_worker)': missing ScriptRunContext! This warning can be ignored when running in bare mode.
+2025-08-06 02:11:08.189 Thread 'Thread-592 (_process_batch_worker)': missing ScriptRunContext! This warning can be ignored when running in bare mode.
+INFO:core.transcription:Loading Whisper model: base
+INFO:core.transcription:Model loaded successfully on cuda
+INFO:core.transcription:Starting transcription for: ssf-tchaser-cd2.avi
+INFO:core.transcription:Audio extracted to: H:\MovieDigest\temp\ssf-tchaser-cd2_audio.wav
+  0%|          | 0/341667 [00:00<?, ?frames/s]C:\Program Files\Python312\Lib\site-packages\whisper\timing.py:42: UserWarning:
+
+Failed to launch Triton kernels, likely due to missing CUDA toolkit; falling back to a slower median kernel implementation...
+
+C:\Program Files\Python312\Lib\site-packages\whisper\timing.py:146: UserWarning:
+
+Failed to launch Triton kernels, likely due to missing CUDA toolkit; falling back to a slower DTW implementation...
+
+ 70%|######9   | 238716/341667 [03:12<01:33, 1101.01frames/s]
+                                                                            

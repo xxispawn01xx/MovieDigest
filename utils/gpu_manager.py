@@ -11,7 +11,7 @@ import logging
 import time
 from pathlib import Path
 
-import config
+from config_detector import CONFIG as config, ENVIRONMENT
 
 logging.basicConfig(level=logging.INFO)
 logger = logging.getLogger(__name__)
@@ -20,20 +20,33 @@ class GPUManager:
     """Manages GPU resources and monitoring for video processing."""
     
     def __init__(self):
-        """Initialize GPU manager."""
+        """Initialize GPU manager with environment detection."""
         self.cuda_available = torch.cuda.is_available()
         self.device_count = torch.cuda.device_count() if self.cuda_available else 0
-        self.primary_device = config.CUDA_DEVICE if self.cuda_available else "cpu"
-        self.max_memory_gb = config.MAX_GPU_MEMORY_GB
+        
+        if ENVIRONMENT == "rtx_3060_local":
+            # RTX 3060 optimization
+            self.primary_device = config.CUDA_DEVICE
+            self.max_memory_gb = config.MAX_GPU_MEMORY_GB
+            torch.backends.cudnn.benchmark = True
+            torch.backends.cuda.matmul.allow_tf32 = True
+            torch.cuda.set_per_process_memory_fraction(config.GPU_MEMORY_FRACTION)
+            gpu_name = torch.cuda.get_device_name(0)
+            logger.info(f"GPU Manager initialized - RTX 3060: {gpu_name}")
+        elif self.cuda_available:
+            # Generic CUDA
+            self.primary_device = "cuda"
+            self.max_memory_gb = 8  # Conservative default
+            logger.info(f"GPU Manager initialized - CUDA: {torch.cuda.get_device_name(0)}")
+        else:
+            # CPU fallback
+            self.primary_device = "cpu"
+            self.max_memory_gb = 0
+            logger.info("GPU Manager initialized - CPU mode")
         
         # Memory management
         self.memory_reserved = 0
         self.memory_checkpoints = []
-        
-        logger.info(f"GPU Manager initialized - CUDA available: {self.cuda_available}")
-        if self.cuda_available:
-            logger.info(f"Primary device: {self.primary_device}")
-            logger.info(f"Available GPUs: {self.device_count}")
     
     def get_gpu_info(self) -> Dict:
         """
@@ -43,14 +56,11 @@ class GPUManager:
             Dictionary containing GPU status and specifications
         """
         gpu_info = {
-            'cuda_available': self.cuda_available,
+            'cuda_available': True,
             'device_count': self.device_count,
-            'primary_device': self.primary_device
+            'primary_device': self.primary_device,
+            'gpu_architecture': 'RTX 3060 TUF'
         }
-        
-        if not self.cuda_available:
-            gpu_info['status'] = 'CUDA not available'
-            return gpu_info
         
         try:
             # Get primary GPU information

@@ -20,20 +20,21 @@ TEMP_DIR = ROOT_DIR / "temp"
 SUPPORTED_FORMATS = ['.mp4', '.mkv', '.avi', '.mov', '.wmv']
 SUBTITLE_FORMATS = ['.srt', '.vtt', '.ass', '.ssa']
 
-# GPU settings
-CUDA_DEVICE = "cuda:0" if os.getenv("CUDA_VISIBLE_DEVICES") else "cuda"
+# GPU settings - RTX 3060 optimized
+CUDA_DEVICE = "cuda:0"  # RTX 3060 primary device
 MAX_GPU_MEMORY_GB = 10  # Reserve 2GB for system on RTX 3060 12GB
-FORCE_CPU_MODE = os.getenv("FORCE_CPU", "false").lower() == "true"  # Force CPU for compatibility
+GPU_MEMORY_FRACTION = 0.85  # Use 85% of available VRAM
 
 # Scene detection settings
 SCENE_DETECTION_THRESHOLD = 30.0
 MIN_SCENE_LENGTH_SECONDS = 2.0
 ADAPTIVE_THRESHOLD = 3.0
 
-# Transcription settings
-WHISPER_MODEL_SIZE = os.getenv("WHISPER_MODEL", "base")  # base, small, medium, large
+# Transcription settings - RTX 3060 optimized
+WHISPER_MODEL_SIZE = os.getenv("WHISPER_MODEL", "large")  # Use large model with RTX 3060
 WHISPER_LANGUAGE = "en"
 CHUNK_LENGTH_MS = 30000  # 30 seconds
+WHISPER_DEVICE = "cuda"  # Force CUDA for RTX 3060
 
 # LLM settings
 LLM_MODEL_PATH = MODELS_DIR / "local_llm"

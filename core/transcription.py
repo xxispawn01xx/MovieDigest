@@ -12,7 +12,7 @@ import logging
 import json
 import warnings
 
-import config
+from config_detector import CONFIG as config, ENVIRONMENT
 from utils.warning_suppressor import suppress_cuda_warnings
 
 # Suppress CUDA/Triton warnings for cleaner output
@@ -25,22 +25,26 @@ class OfflineTranscriber:
     """Offline video transcription using Whisper."""
     
     def __init__(self):
-        """Initialize transcriber with GPU optimization."""
-        # Determine device with warning suppression
-        if config.FORCE_CPU_MODE:
-            self.device = torch.device("cpu")
-            device_info = "CPU (forced)"
-        elif torch.cuda.is_available():
+        """Initialize transcriber with environment-specific optimization."""
+        if ENVIRONMENT == "rtx_3060_local":
+            # RTX 3060 CUDA optimization
             self.device = torch.device(config.CUDA_DEVICE)
-            device_info = f"CUDA ({torch.cuda.get_device_name(0)})"
+            torch.cuda.set_per_process_memory_fraction(config.GPU_MEMORY_FRACTION)
+            torch.cuda.empty_cache()
+            gpu_name = torch.cuda.get_device_name(0)
+            gpu_memory_gb = torch.cuda.get_device_properties(0).total_memory / 1e9
+            logger.info(f"Transcriber initialized on RTX 3060: {gpu_name} ({gpu_memory_gb:.1f}GB)")
+        elif torch.cuda.is_available():
+            # Generic CUDA
+            self.device = torch.device("cuda")
+            logger.info(f"Transcriber initialized on CUDA: {torch.cuda.get_device_name(0)}")
         else:
+            # CPU fallback
             self.device = torch.device("cpu")
-            device_info = "CPU (CUDA unavailable)"
-        
+            logger.info("Transcriber initialized on CPU")
+            
         self.model = None
         self.model_size = config.WHISPER_MODEL_SIZE
-        
-        logger.info(f"Transcriber initialized on device: {device_info}")
     
     def load_model(self, model_size: str = None) -> bool:
         """
