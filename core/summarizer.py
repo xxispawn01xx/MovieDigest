@@ -386,7 +386,47 @@ class VideoSummarizer:
         with open(bookmark_path, 'w', encoding='utf-8') as f:
             f.write(xspf_content)
         
+        # Also create a simple instruction file
+        instruction_path = output_dir / f"{video_path.stem}_INSTRUCTIONS.txt"
+        instructions = f"""VLC BOOKMARK INSTRUCTIONS for {video_path.name}
+{'='*60}
+
+HOW TO USE THESE BOOKMARKS:
+
+1. OPEN IN VLC:
+   - Double-click: {bookmark_path.name}
+   - OR drag & drop this file into VLC
+   - OR VLC Menu: Media → Open File → Select this .xspf file
+
+2. VIEW BOOKMARKS:
+   - In VLC: View menu → Playlist (Ctrl+L)
+   - You'll see {len(selected_scenes)} key scenes listed
+
+3. NAVIGATE:
+   - Click any scene in the playlist to jump to that moment
+   - Use Next/Previous buttons to move between key scenes
+   - Each scene shows start time and description
+
+SCENES INCLUDED:
+"""
+        
+        for i, scene in enumerate(selected_scenes, 1):
+            start_min = int(scene['start_time'] // 60)
+            start_sec = int(scene['start_time'] % 60)
+            duration_min = int(scene['duration'] // 60)
+            duration_sec = int(scene['duration'] % 60)
+            
+            description = self._get_scene_description(scene, narrative_analysis)
+            instructions += f"\n{i:2d}. {start_min:02d}:{start_sec:02d} - {description} ({duration_min:02d}:{duration_sec:02d})"
+        
+        instructions += f"\n\nGenerated: {datetime.now().strftime('%Y-%m-%d %H:%M:%S')}"
+        instructions += f"\nOriginal Video: {video_path}"
+        
+        with open(instruction_path, 'w', encoding='utf-8') as f:
+            f.write(instructions)
+        
         logger.info(f"VLC bookmarks created: {bookmark_path}")
+        logger.info(f"Instructions created: {instruction_path}")
         return bookmark_path
     
     def _generate_xspf_content(self, video_path: Path, selected_scenes: List[Dict],
