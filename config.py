@@ -42,7 +42,9 @@ LLM_MAX_TOKENS = 2048
 LLM_TEMPERATURE = 0.7
 
 # Summary settings
-SUMMARY_LENGTH_PERCENT = 15  # Target 15% of original length
+SUMMARY_LENGTH_PERCENT = 15  # Default compression for shorter videos
+LONG_VIDEO_LENGTH_PERCENT = 20  # Higher compression for longer videos (better narrative flow)
+LONG_VIDEO_THRESHOLD_MINUTES = 90  # Videos longer than 90 minutes use higher compression
 MAX_SUMMARY_LENGTH_MINUTES = 20
 MIN_SUMMARY_LENGTH_MINUTES = 2
 

@@ -9,7 +9,8 @@ Preferred communication style: Simple, everyday language.
 # Recent Changes
 
 ## Latest Updates (Aug 6, 2025)
-- **Critical Summarization Fixes**: Fixed core issues preventing proper video summarization including scene selection validation, FFmpeg command optimization, and strict 15% compression enforcement
+- **Adaptive Compression System**: Implemented smart compression ratios - 15% for videos ≤90 minutes, 20% for longer videos to maintain better narrative flow
+- **Critical Summarization Fixes**: Fixed core issues preventing proper video summarization including scene selection validation, FFmpeg command optimization, and strict compression enforcement
 - **Video Seeking Fix**: Implemented proper FFmpeg concatenation with faststart flag and timestamp reset for seeking compatibility
 - **Streamlit Navigation Fix**: Replaced problematic st.switch_page calls with st.rerun to prevent app crashes
 - **Scene Selection Enhancement**: Added validation to prevent invalid scene data and ensure proper duration constraints

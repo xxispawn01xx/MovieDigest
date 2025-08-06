@@ -21,7 +21,9 @@ class VideoSummarizer:
     
     def __init__(self):
         """Initialize video summarizer."""
-        self.target_compression = config.SUMMARY_LENGTH_PERCENT / 100.0
+        self.default_compression = config.SUMMARY_LENGTH_PERCENT / 100.0
+        self.long_video_compression = config.LONG_VIDEO_LENGTH_PERCENT / 100.0
+        self.long_video_threshold = config.LONG_VIDEO_THRESHOLD_MINUTES * 60
         self.max_summary_duration = config.MAX_SUMMARY_LENGTH_MINUTES * 60
         self.min_summary_duration = config.MIN_SUMMARY_LENGTH_MINUTES * 60
     
@@ -45,10 +47,19 @@ class VideoSummarizer:
         logger.info(f"Creating summary for: {video_path.name}")
         
         try:
-            # Calculate original duration
+            # Calculate target duration with adaptive compression based on video length
             original_duration = self._get_video_duration(video_path)
+            
+            # Use higher compression for longer videos to maintain narrative flow
+            if original_duration > self.long_video_threshold:
+                target_compression = self.long_video_compression
+                logger.info(f"Long video ({original_duration/60:.1f}min) - using {target_compression*100:.0f}% compression")
+            else:
+                target_compression = self.default_compression
+                logger.info(f"Standard video ({original_duration/60:.1f}min) - using {target_compression*100:.0f}% compression")
+            
             target_duration = min(
-                original_duration * self.target_compression,
+                original_duration * target_compression,
                 self.max_summary_duration
             )
             target_duration = max(target_duration, self.min_summary_duration)
@@ -144,8 +155,11 @@ class VideoSummarizer:
         selected_scenes = []
         total_duration = 0.0
         
-        # Enforce strict 15% compression ratio from config
-        logger.info(f"Target compression: {self.target_compression*100:.1f}%")
+        # Calculate compression ratio for this video
+        video_duration = sum(scene['duration'] for scene in valid_scenes)
+        current_compression = target_duration / video_duration if video_duration > 0 else 0
+        
+        logger.info(f"Target compression: {current_compression*100:.1f}%")
         logger.info(f"Target duration: {target_duration/60:.1f} minutes")
         
         # Only select scenes that fit within target duration

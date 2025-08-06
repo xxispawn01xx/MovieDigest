@@ -40,15 +40,21 @@ def test_summarization_fix():
     scene_detector = SceneDetector()
     summarizer = VideoSummarizer()
     
-    # Check target compression
-    expected_compression = config.SUMMARY_LENGTH_PERCENT / 100.0
-    actual_compression = summarizer.target_compression
+    # Check compression ratios
+    expected_default = config.SUMMARY_LENGTH_PERCENT / 100.0
+    expected_long = config.LONG_VIDEO_LENGTH_PERCENT / 100.0
+    actual_default = summarizer.default_compression
+    actual_long = summarizer.long_video_compression
     
-    print(f"✓ Expected compression: {expected_compression*100:.1f}%")
-    print(f"✓ Summarizer compression: {actual_compression*100:.1f}%")
+    print(f"✓ Expected default compression: {expected_default*100:.1f}%")
+    print(f"✓ Expected long video compression: {expected_long*100:.1f}%")
+    print(f"✓ Summarizer default: {actual_default*100:.1f}%")
+    print(f"✓ Summarizer long video: {actual_long*100:.1f}%")
+    print(f"✓ Long video threshold: {config.LONG_VIDEO_THRESHOLD_MINUTES} minutes")
     
-    if abs(expected_compression - actual_compression) < 0.01:
-        print("✅ Compression ratio correctly configured")
+    if (abs(expected_default - actual_default) < 0.01 and 
+        abs(expected_long - actual_long) < 0.01):
+        print("✅ Adaptive compression ratios correctly configured")
     else:
         print("❌ Compression ratio mismatch!")
         return False
