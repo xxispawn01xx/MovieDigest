@@ -32,19 +32,19 @@ SCENE_DETECTION_THRESHOLD = 30.0
 MIN_SCENE_LENGTH_SECONDS = 2.0
 ADAPTIVE_THRESHOLD = 3.0
 
-# RTX 3060 optimized Whisper settings
+# RTX 3060 optimized Whisper settings - Conservative for stability
 WHISPER_MODEL_SIZE = os.getenv("WHISPER_MODEL", "large")  # RTX 3060 can handle large
 WHISPER_LANGUAGE = "en"
 CHUNK_LENGTH_MS = 30000  # 30 seconds
 WHISPER_DEVICE = "cuda"
-WHISPER_BATCH_SIZE = 16  # RTX 3060 optimized batch size
+WHISPER_BATCH_SIZE = 8  # Reduced from 16 for better memory stability
 
-# LLM settings - RTX 3060 optimized
+# LLM settings - RTX 3060 optimized - Conservative for stability
 LLM_MODEL_PATH = MODELS_DIR / "local_llm"
-LLM_MAX_TOKENS = 4096  # Increased for RTX 3060
+LLM_MAX_TOKENS = 2048  # Reduced from 4096 for memory efficiency
 LLM_TEMPERATURE = 0.7
 LLM_DEVICE = "cuda"
-LLM_BATCH_SIZE = 8  # RTX 3060 optimized
+LLM_BATCH_SIZE = 4  # Reduced from 8 for better memory management
 
 # Summary settings
 SUMMARY_LENGTH_PERCENT = 15  # Target 15% of original length
@@ -55,9 +55,9 @@ MIN_SUMMARY_LENGTH_MINUTES = 2
 VALIDATION_METRICS = ["f1_score", "precision", "recall"]
 BENCHMARK_DATASETS = ["tvsum", "summe"]
 
-# RTX 3060 optimized batch processing
-DEFAULT_BATCH_SIZE = 3  # RTX 3060 can handle 3 videos
-MAX_BATCH_SIZE = 4  # Maximum for 12.9GB VRAM
+# RTX 3060 batch processing - Conservative for reliability
+DEFAULT_BATCH_SIZE = 2  # Reduced from 3 for better memory stability
+MAX_BATCH_SIZE = 3  # Reduced from 4 for safer processing
 PROCESSING_TIMEOUT_HOURS = 4  # Faster with RTX 3060
 
 # RTX 3060 Performance Optimization
