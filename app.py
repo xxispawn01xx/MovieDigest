@@ -100,7 +100,8 @@ def main():
     if page == "Overview":
         show_overview_page()
     elif page == "Video Discovery":
-        show_discovery_page()
+        from pages.video_discovery import show_video_discovery
+        show_video_discovery()
     elif page == "Plex Integration":
         show_plex_integration_page()
     elif page == "Advanced Analysis":
@@ -200,105 +201,27 @@ def show_overview_page():
         if st.button("📈 View Results", use_container_width=True):
             st.rerun()
 
-def show_discovery_page():
-    """Display video discovery and scanning interface."""
-    st.header("🔍 Video Discovery")
+# Discovery page moved to pages/video_discovery.py
+
+def show_queue_page():
+    """Display processing queue management."""
+    st.header("📋 Processing Queue")
     
-    # Recent Folders section
-    st.subheader("📂 Recent Folders")
-    recent_folders = st.session_state.db.get_recent_folders(limit=5)
+    # Queue summary
+    queue_summary = st.session_state.batch_processor.get_queue_summary()
     
-    if recent_folders:
-        # Create columns for recent folder buttons
-        cols = st.columns(min(len(recent_folders), 3))
-        
-        for i, folder in enumerate(recent_folders[:3]):  # Show max 3 in one row
-            with cols[i]:
-                folder_name = Path(folder['folder_path']).name or "Root"
-                last_scan = folder['last_scanned'][:10] if folder['last_scanned'] else 'Unknown'
-                button_text = f"📁 {folder_name}\n{folder['video_count']} videos • {last_scan}"
-                
-                if st.button(button_text, use_container_width=True, key=f"recent_{i}"):
-                    st.session_state.scan_directory = folder['folder_path']
-                    st.rerun()
-        
-        # Show more recent folders in expandable section
-        if len(recent_folders) > 3:
-            with st.expander(f"Show {len(recent_folders) - 3} more recent folders"):
-                for j, folder in enumerate(recent_folders[3:]):
-                    col1, col2, col3, col4 = st.columns([3, 1, 1, 1])
-                    
-                    with col1:
-                        folder_name = Path(folder['folder_path']).name or "Root"
-                        if st.button(f"📁 {folder_name}", 
-                                   key=f"recent_exp_{j}"):
-                            st.session_state.scan_directory = folder['folder_path']
-                            st.rerun()
-                    
-                    with col2:
-                        st.text(f"{folder['video_count']}")
-                    
-                    with col3:
-                        last_scan = folder['last_scanned'][:10] if folder['last_scanned'] else 'Unknown'
-                        st.text(last_scan)
-                    
-                    with col4:
-                        if st.button("🗑️", key=f"remove_{j}", 
-                                   help="Remove from recent"):
-                            st.session_state.db.remove_recent_folder(folder['folder_path'])
-                            st.rerun()
-    else:
-        st.info("No recent folders. Scan a directory to get started!")
-    
-    # Directory input
-    st.subheader("Scan Directory")
-    
-    col1, col2 = st.columns([3, 1])
-    
-    with col1:
-        # Use session state for directory if set by recent folder click
-        default_dir = getattr(st.session_state, 'scan_directory', str(Path.home()))
-        
-        scan_directory = st.text_input(
-            "Root Directory Path",
-            value=default_dir,
-            help="Enter the path to scan for video files"
-        )
-    
-    with col2:
-        include_subdirs = st.checkbox("Include Subdirectories", value=True)
-    
-    # Scan controls
     col1, col2, col3 = st.columns(3)
     
     with col1:
-        if st.button("🔍 Start Scan", type="primary", use_container_width=True):
-            if Path(scan_directory).exists():
-                with st.spinner("Scanning for videos..."):
-                    scan_results = st.session_state.batch_processor.scan_and_queue_videos(
-                        scan_directory, include_subdirs
-                    )
-                
-                # Display results
-                st.success(f"Scan completed!")
-                
-                col1, col2, col3, col4 = st.columns(4)
-                with col1:
-                    st.metric("Discovered", scan_results['discovered'])
-                with col2:
-                    st.metric("New Videos", scan_results['new'])
-                with col3:
-                    st.metric("Already Processed", scan_results['already_processed'])
-                with col4:
-                    st.metric("Queued", scan_results['queued'])
-                
-                if scan_results['errors']:
-                    st.error(f"Errors encountered: {len(scan_results['errors'])}")
-                    with st.expander("View Errors"):
-                        for error in scan_results['errors']:
-                            st.text(error)
-            else:
-                st.error("Directory does not exist!")
+        st.metric("Videos in Queue", queue_summary.get('total_in_queue', 0))
+    
+    with col2:
+        st.metric("Processing", queue_summary.get('processing', 0))
+    
+    with col3:
+        st.metric("Completed", queue_summary.get('completed', 0))
+    
+    st.info("Queue management functionality available here.")
     
     with col2:
         if st.button("📁 Browse Directory", use_container_width=True):

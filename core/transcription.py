@@ -156,10 +156,19 @@ class OfflineTranscriber:
             
             audio_path = temp_dir / f"{video_path.stem}_audio.wav"
             
-            # Extract audio using ffmpeg with better error handling
+            # Get media stream information for track selection
+            from core.media_selector import MediaTrackSelector
+            selector = MediaTrackSelector()
+            stream_info = selector.analyze_media_streams(video_path)
+            
+            # Use recommended audio track
+            recommended_audio = stream_info.get('recommended_audio', 0)
+            
+            # Extract audio using ffmpeg with track selection
             cmd = [
                 'ffmpeg',
                 '-i', str(video_path),
+                '-map', f'0:a:{recommended_audio}',  # Select specific audio track
                 '-acodec', 'pcm_s16le',
                 '-ac', '1',  # Mono audio
                 '-ar', '16000',  # 16kHz sample rate
@@ -168,6 +177,8 @@ class OfflineTranscriber:
                 '-y',  # Overwrite output
                 str(audio_path)
             ]
+            
+            logger.info(f"Extracting audio from track {recommended_audio} for transcription")
             
             result = subprocess.run(
                 cmd,

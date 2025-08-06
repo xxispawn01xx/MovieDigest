@@ -9,10 +9,15 @@ Preferred communication style: Simple, everyday language.
 # Recent Changes
 
 ## Latest Updates (Aug 6, 2025)
+- **Audio Track & Subtitle Selection System**: Implemented comprehensive MediaTrackSelector that automatically detects and selects optimal audio tracks (default/English/most channels priority) and subtitles (SRT, VTT, ASS, SSA) from video files during processing
+- **Enhanced Video Processing**: Updated transcription and summarization to use selected audio tracks, fixing issues where users couldn't access multiple audio streams or subtitle tracks from original videos
+- **Streamlit Navigation Fix**: Fixed problematic st.switch_page calls causing navigation errors by properly structuring pages directory and using correct page routing
+- **Intelligent Track Analysis**: Built FFprobe-based stream analyzer that identifies video codec, audio tracks with language/channel info, and subtitle streams with format detection
+- **External Subtitle Support**: Added automatic detection of external subtitle files with language-specific naming patterns (e.g., .en.srt, .spanish.srt)
+- **Batch Media Settings**: Created interface for configuring audio/subtitle selection strategies across multiple videos in batch processing
 - **Adaptive Compression System**: Implemented smart compression ratios - 15% for videos ≤90 minutes, 20% for longer videos to maintain better narrative flow
 - **Critical Summarization Fixes**: Fixed core issues preventing proper video summarization including scene selection validation, FFmpeg command optimization, and strict compression enforcement
 - **Video Seeking Fix**: Implemented proper FFmpeg concatenation with faststart flag and timestamp reset for seeking compatibility
-- **Streamlit Navigation Fix**: Replaced problematic st.switch_page calls with st.rerun to prevent app crashes
 - **Scene Selection Enhancement**: Added validation to prevent invalid scene data and ensure proper duration constraints
 - **Enhanced Pause/Resume System**: Added comprehensive pause/resume controls with separate pause (temporary) vs stop (complete) functionality for better batch processing control
 - **Queue Management Fix**: Fixed GUI update issue where clearing the queue updated console but not the interface - now properly syncs memory and database

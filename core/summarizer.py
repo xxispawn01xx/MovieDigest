@@ -350,6 +350,13 @@ class VideoSummarizer:
         # Create a simple concatenation using individual clips
         cmd = ['ffmpeg']
         
+        # Get media stream information for proper track selection
+        from core.media_selector import MediaTrackSelector
+        selector = MediaTrackSelector()
+        stream_info = selector.analyze_media_streams(video_path)
+        recommended_audio = stream_info.get('recommended_audio', 0)
+        logger.info(f"Using audio track {recommended_audio} for summary creation")
+        
         # Add input files for each scene
         for scene in selected_scenes:
             cmd.extend([
@@ -360,8 +367,10 @@ class VideoSummarizer:
         
         # Fixed concatenation approach for better seeking and playback
         if len(selected_scenes) == 1:
-            # Single scene - direct encoding
+            # Single scene - direct encoding with audio track selection
             cmd.extend([
+                '-map', '0:v',  # Map video
+                '-map', f'0:a:{recommended_audio}',  # Map specific audio track
                 '-c:v', 'libx264',
                 '-c:a', 'aac',
                 '-movflags', '+faststart',  # Enable seeking
@@ -373,8 +382,15 @@ class VideoSummarizer:
             # Multiple scenes - use direct filter_complex for better seeking
             logger.info(f"Concatenating {len(selected_scenes)} scenes using filter_complex")
             
-            # Build filter_complex for concatenation
-            filter_str = ''.join([f'[{i}:v][{i}:a]' for i in range(len(selected_scenes))])
+            # Build filter_complex for concatenation with audio track selection
+            # Select specific audio track for all inputs
+            audio_map_parts = []
+            video_map_parts = []
+            for i in range(len(selected_scenes)):
+                video_map_parts.append(f'[{i}:v]')
+                audio_map_parts.append(f'[{i}:a:{recommended_audio}]')  # Select specific audio track
+            
+            filter_str = ''.join([f'{video_map_parts[i]}{audio_map_parts[i]}' for i in range(len(selected_scenes))])
             filter_str += f'concat=n={len(selected_scenes)}:v=1:a=1[outv][outa]'
             
             cmd.extend([
