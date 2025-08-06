@@ -59,7 +59,7 @@ Preferred LLM models: Mistral (uncensored) over traditional models like DialoGPT
 ## Core Processing Pipeline
 - **Video Discovery**: Scans directories for supported video formats (MP4, MKV, AVI, MOV, WMV) and extracts metadata using OpenCV and ffprobe
 - **Scene Detection**: Multi-algorithm approach using PySceneDetect with content-based, adaptive, and threshold detection methods
-- **Audio Transcription**: Offline speech-to-text using OpenAI's Whisper models with GPU acceleration
+- **Audio Transcription**: Offline speech-to-text using OpenAI's Whisper models with GPU acceleration and 3-tier FFmpeg fallback system
 - **Narrative Analysis**: Local LLM integration for understanding film structure and identifying key narrative moments (with fallback mode)
 - **Video Summarization**: Combines all analysis to create compressed summaries targeting 15% of original length
 - **VLC Bookmark Generation**: Creates XSPF playlist files with bookmarks for key scenes
@@ -70,10 +70,19 @@ Preferred LLM models: Mistral (uncensored) over traditional models like DialoGPT
 - **SQLite Database**: Local database tracking video metadata, processing status, scene data, transcription results, and validation metrics
 - **File-based Storage**: Models stored locally in `/models` directory, temporary files in `/temp`, and outputs in `/output`
 
-## GPU Management
-- **CUDA Optimization**: Intelligent GPU memory management with configurable limits (default 10GB on RTX 3060)
-- **Resource Monitoring**: Real-time GPU utilization, temperature, and memory usage tracking
-- **Batch Processing**: Queue-based processing with automatic resource allocation and error recovery
+## Advanced GPU Memory Management
+- **Intelligent Memory Pressure Detection**: Real-time monitoring with automatic cleanup at 70%, 80%, and 90% VRAM usage thresholds
+- **Multi-Tier Cleanup System**: Standard, aggressive, and emergency memory optimization with garbage collection and cache clearing
+- **CUDA Out-of-Memory Recovery**: Automatic detection and recovery from OOM errors with reduced processing settings and emergency mode fallback
+- **Adaptive Batch Sizing**: Dynamic batch size adjustment based on video characteristics, available memory, and historical performance
+- **Memory-Conservative Processing**: Emergency processing mode with 75% reduced batch sizes and optimized chunk lengths
+- **Sustained Processing Optimization**: Preventive cleanup every 2 videos, continuous memory monitoring, and intelligent resource allocation
+
+## RTX 3060 Optimization Settings
+- **Memory Allocation**: 11GB VRAM usage (85% of 12.9GB total) with 1.9GB system reserve
+- **Recommended Batch Sizes**: Video processing 1-2 videos, Whisper transcription 4-6 chunks, LLM processing 2-4 batches
+- **Performance Features**: Tensor Core acceleration, TF32 optimization, mixed precision training, cuDNN benchmarking
+- **Emergency Mode Settings**: Whisper batch 2-4, LLM batch 1-2, reduced chunk lengths for memory recovery
 
 ## Validation System
 - **Real-time Metrics**: F1-score calculation using TVSum/SumMe benchmark methodologies
