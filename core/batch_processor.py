@@ -508,6 +508,7 @@ class BatchProcessor:
         
         status = {
             'is_processing': self.is_processing,
+            'is_paused': self.is_paused,
             'queue_size': queue_size,
             'current_batch_size': self.current_batch_size,
             'stats': self.processing_stats.copy(),
