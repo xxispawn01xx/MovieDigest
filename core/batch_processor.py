@@ -448,6 +448,27 @@ class BatchProcessor:
         
         logger.info("Processing queue cleared")
     
+    def add_video_to_queue_by_id(self, video_id: int) -> bool:
+        """Add a video to processing queue by database ID."""
+        try:
+            video_details = self.db.get_video_details(video_id)
+            if not video_details:
+                logger.error(f"Video {video_id} not found in database")
+                return False
+            
+            # Set status to queued
+            self.db.update_processing_status(video_id, 'queued')
+            
+            # Add to processing queue
+            self.processing_queue.put(video_id)
+            
+            logger.info(f"Added video {video_id} to processing queue")
+            return True
+            
+        except Exception as e:
+            logger.error(f"Failed to add video {video_id} to queue: {e}")
+            return False
+    
     def add_video_to_queue(self, video_path: str) -> bool:
         """
         Add a specific video to the processing queue.

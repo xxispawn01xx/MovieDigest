@@ -207,6 +207,64 @@ class VideoDatabase:
                 WHERE video_id = ?
             """, params)
     
+    def reset_video_for_reprocessing(self, video_id: int) -> bool:
+        """Reset a video's processing status to allow reprocessing with new features."""
+        try:
+            with sqlite3.connect(self.db_path) as conn:
+                cursor = conn.cursor()
+                
+                # Reset processing status
+                cursor.execute("""
+                    UPDATE processing_status 
+                    SET status = 'discovered', 
+                        progress_percent = 0.0,
+                        current_stage = NULL,
+                        started_at = NULL,
+                        completed_at = NULL,
+                        error_message = NULL,
+                        processing_time_seconds = NULL
+                    WHERE video_id = ?
+                """, (video_id,))
+                
+                # Keep video metadata but clear processing-specific data
+                cursor.execute("DELETE FROM scene_data WHERE video_id = ?", (video_id,))
+                cursor.execute("DELETE FROM transcriptions WHERE video_id = ?", (video_id,))
+                cursor.execute("DELETE FROM narrative_analysis WHERE video_id = ?", (video_id,))
+                cursor.execute("DELETE FROM validation_metrics WHERE video_id = ?", (video_id,))
+                
+                conn.commit()
+                logger.info(f"Reset video {video_id} for reprocessing")
+                return True
+                
+        except Exception as e:
+            logger.error(f"Failed to reset video {video_id}: {e}")
+            return False
+    
+    def get_completed_videos_for_reprocessing(self) -> List[Dict]:
+        """Get list of completed videos that could benefit from reprocessing."""
+        with sqlite3.connect(self.db_path) as conn:
+            cursor = conn.cursor()
+            
+            cursor.execute("""
+                SELECT v.id, v.file_path, v.duration_seconds, 
+                       ps.completed_at, ps.processing_time_seconds
+                FROM videos v
+                JOIN processing_status ps ON v.id = ps.video_id
+                WHERE ps.status = 'completed'
+                ORDER BY ps.completed_at DESC
+            """)
+            
+            return [
+                {
+                    'id': row[0],
+                    'file_path': row[1],
+                    'duration_seconds': row[2],
+                    'completed_at': row[3],
+                    'processing_time_seconds': row[4]
+                }
+                for row in cursor.fetchall()
+            ]
+    
     def update_video_status(self, video_id: int, status: str):
         """Update the status of a video (alias for update_processing_status)."""
         self.update_processing_status(video_id, status)

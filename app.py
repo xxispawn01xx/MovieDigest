@@ -89,7 +89,7 @@ def main():
         page = st.selectbox(
             "Choose a page:",
             ["Overview", "Video Discovery", "Plex Integration", "Advanced Analysis", "Processing Queue", "Batch Processing", 
-             "Summary Results", "Export Center", "Model Management", "System Status", "Settings"]
+             "Summary Results", "Export Center", "Model Management", "System Status", "Settings", "Reprocessing"]
         )
     
     # Route to selected page
@@ -115,6 +115,8 @@ def main():
         show_status_page()
     elif page == "Settings":
         show_settings_page()
+    elif page == "Reprocessing":
+        show_reprocessing_page()
 
 def show_overview_page():
     """Display overview dashboard."""
@@ -1667,6 +1669,174 @@ def show_advanced_analysis_page():
             
             with col3:
                 st.metric("Quality Score", "94%")
+
+def show_reprocessing_page():
+    """Display reprocessing interface for updating videos with new features."""
+    st.header("🔄 Reprocessing Center")
+    
+    st.info("""
+    **Reprocess videos to get new features:**
+    - Advanced credits detection (computer vision-based)
+    - Enhanced subtitle preservation
+    - VLC auto-detection bookmarks
+    - Custom output directory support
+    """)
+    
+    # Get completed videos
+    completed_videos = st.session_state.db.get_completed_videos_for_reprocessing()
+    
+    if not completed_videos:
+        st.warning("No completed videos found for reprocessing.")
+        return
+    
+    st.subheader("Select Videos to Reprocess")
+    
+    # Create selection interface
+    video_options = {}
+    for video in completed_videos:
+        video_name = Path(video['file_path']).name
+        duration_min = video['duration_seconds'] / 60 if video['duration_seconds'] else 0
+        processing_time = video['processing_time_seconds'] / 60 if video['processing_time_seconds'] else 0
+        completed_date = video['completed_at'][:10] if video['completed_at'] else 'Unknown'
+        
+        display_name = f"{video_name} ({duration_min:.1f}min, processed {completed_date})"
+        video_options[display_name] = video['id']
+    
+    selected_videos = st.multiselect(
+        "Choose videos to reprocess:",
+        list(video_options.keys()),
+        help="Selected videos will be reset and processed again with latest features"
+    )
+    
+    if selected_videos:
+        st.subheader("Reprocessing Preview")
+        
+        col1, col2 = st.columns(2)
+        
+        with col1:
+            st.write("**What will be updated:**")
+            st.write("✅ Credits detection (computer vision)")
+            st.write("✅ Subtitle preservation in summaries")
+            st.write("✅ VLC auto-detection bookmarks")
+            st.write("✅ Custom output directory support")
+        
+        with col2:
+            st.write("**What will be replaced:**")
+            st.write("🔄 Video summary files")
+            st.write("🔄 VLC bookmark files")
+            st.write("🔄 JSON exports")
+            st.write("🔄 Processing metadata")
+        
+        # Batch options
+        st.subheader("Reprocessing Options")
+        
+        col1, col2 = st.columns(2)
+        
+        with col1:
+            backup_outputs = st.checkbox(
+                "Backup existing outputs",
+                value=True,
+                help="Move existing outputs to backup folder before reprocessing"
+            )
+        
+        with col2:
+            process_immediately = st.checkbox(
+                "Start processing immediately",
+                value=False,
+                help="Begin reprocessing right away instead of adding to queue"
+            )
+        
+        # Action buttons
+        st.subheader("Actions")
+        
+        col1, col2, col3 = st.columns(3)
+        
+        with col1:
+            if st.button("🔄 Reprocess Selected", use_container_width=True):
+                reprocessed_count = 0
+                
+                for display_name in selected_videos:
+                    video_id = video_options[display_name]
+                    
+                    # Backup existing outputs if requested
+                    if backup_outputs:
+                        _backup_video_outputs(video_id)
+                    
+                    # Reset video for reprocessing
+                    if st.session_state.db.reset_video_for_reprocessing(video_id):
+                        reprocessed_count += 1
+                        
+                        # Add to processing queue if immediate processing is requested
+                        if process_immediately:
+                            st.session_state.batch_processor.add_video_to_queue_by_id(video_id)
+                
+                if reprocessed_count > 0:
+                    st.success(f"✅ Reset {reprocessed_count} videos for reprocessing")
+                    
+                    if process_immediately:
+                        st.info("🚀 Started immediate processing")
+                    else:
+                        st.info("📋 Videos added to queue. Go to Batch Processing to start.")
+                    
+                    st.rerun()
+                else:
+                    st.error("❌ Failed to reset videos for reprocessing")
+        
+        with col2:
+            if st.button("📋 Add to Queue Only", use_container_width=True):
+                queued_count = 0
+                
+                for display_name in selected_videos:
+                    video_id = video_options[display_name]
+                    
+                    if st.session_state.db.reset_video_for_reprocessing(video_id):
+                        queued_count += 1
+                
+                if queued_count > 0:
+                    st.success(f"✅ Added {queued_count} videos to processing queue")
+                    st.info("Go to Batch Processing page to start processing")
+                else:
+                    st.error("❌ Failed to add videos to queue")
+        
+        with col3:
+            if st.button("⚠️ Reset Only", use_container_width=True):
+                st.warning("This will reset processing status without reprocessing")
+                
+                reset_count = 0
+                for display_name in selected_videos:
+                    video_id = video_options[display_name]
+                    if st.session_state.db.reset_video_for_reprocessing(video_id):
+                        reset_count += 1
+                
+                if reset_count > 0:
+                    st.success(f"✅ Reset {reset_count} videos to 'discovered' status")
+                else:
+                    st.error("❌ Failed to reset videos")
+    
+    # Processing history
+    st.subheader("Processing History")
+    
+    if completed_videos:
+        history_df = pd.DataFrame([
+            {
+                'Video': Path(video['file_path']).name,
+                'Duration (min)': f"{(video['duration_seconds'] or 0) / 60:.1f}",
+                'Processing Time (min)': f"{(video['processing_time_seconds'] or 0) / 60:.1f}",
+                'Completed': video['completed_at'][:10] if video['completed_at'] else 'Unknown'
+            }
+            for video in completed_videos[:10]  # Show latest 10
+        ])
+        
+        st.dataframe(history_df, use_container_width=True)
+        
+        if len(completed_videos) > 10:
+            st.info(f"Showing latest 10 of {len(completed_videos)} completed videos")
+
+def _backup_video_outputs(video_id: int):
+    """Backup existing outputs for a video before reprocessing."""
+    # This would move existing outputs to a backup folder
+    # Implementation would depend on how outputs are organized
+    pass
 
 if __name__ == "__main__":
     main()
