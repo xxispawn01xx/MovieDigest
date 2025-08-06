@@ -22,6 +22,49 @@ def show_model_manager():
     # Initialize model downloader
     downloader = ModelDownloader()
     
+    # Hugging Face Token Configuration
+    st.subheader("🔑 Hugging Face Configuration")
+    
+    # Check if token already exists
+    current_token = os.environ.get('HF_TOKEN', '')
+    
+    col1, col2 = st.columns([3, 1])
+    
+    with col1:
+        hf_token = st.text_input(
+            "Hugging Face Token (for one-click model downloads):",
+            value="***Hidden***" if current_token else "",
+            type="password" if current_token else "default",
+            help="Get your token from https://huggingface.co/settings/tokens"
+        )
+    
+    with col2:
+        if st.button("💾 Save Token", use_container_width=True):
+            if hf_token and hf_token != "***Hidden***":
+                # Save to environment for current session
+                os.environ['HF_TOKEN'] = hf_token
+                st.success("Token saved for this session!")
+                st.rerun()
+            elif not hf_token:
+                st.error("Please enter a valid token")
+    
+    if current_token:
+        st.success("✅ Hugging Face token is configured")
+        if st.button("🗑️ Clear Token"):
+            os.environ.pop('HF_TOKEN', None)
+            st.info("Token cleared")
+            st.rerun()
+    else:
+        st.info("💡 Add your Hugging Face token for seamless model downloads")
+        st.markdown("""
+        **How to get your Hugging Face token:**
+        1. Go to [huggingface.co/settings/tokens](https://huggingface.co/settings/tokens)
+        2. Create a new token with 'Read' permissions
+        3. Copy and paste it above
+        """)
+    
+    st.divider()
+    
     # Quick Stats Dashboard
     col1, col2, col3, col4 = st.columns(4)
     
@@ -176,15 +219,26 @@ def show_model_manager():
                         progress_bar.progress(10)
                         
                         try:
-                            # Use improved Windows encoding fix for download
-                            status_text.write("📥 Downloading model files...")
+                            # Check if HF_TOKEN is available
+                            hf_token = os.environ.get('HF_TOKEN', '')
+                            
+                            # Prepare download command with token if available
+                            base_command = model['command']
+                            if hf_token:
+                                # Add token to command
+                                base_command = base_command.replace('huggingface-cli download', f'huggingface-cli download --token {hf_token}')
+                                status_text.write("📥 Downloading with authenticated token...")
+                            else:
+                                status_text.write("📥 Downloading model files (public access)...")
+                            
                             progress_bar.progress(30)
                             
-                            # Use the encoding fix utility
+                            # Use the encoding fix utility with HF token if available
                             success, error_msg = fix_huggingface_cli_download(
                                 model['repo'], 
                                 "models/local_llm",
-                                timeout=1800
+                                timeout=1800,
+                                hf_token=hf_token if hf_token else None
                             )
                             
                             progress_bar.progress(90)

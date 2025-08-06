@@ -53,7 +53,7 @@ def run_command_with_encoding_fix(cmd, **kwargs):
         
         return subprocess.run(cmd, **encoding_kwargs)
 
-def fix_huggingface_cli_download(model_repo, local_dir, timeout=1800):
+def fix_huggingface_cli_download(model_repo, local_dir, timeout=1800, hf_token=None):
     """
     Download Hugging Face model with Windows encoding fixes.
     
@@ -71,6 +71,10 @@ def fix_huggingface_cli_download(model_repo, local_dir, timeout=1800):
         
         # Build command - use hf download (new command) instead of deprecated huggingface-cli download
         cmd = ["python", "-m", "huggingface_hub.commands.huggingface_cli", "download", model_repo, "--local-dir", local_dir]
+        
+        # Add token if provided
+        if hf_token:
+            cmd.extend(["--token", hf_token])
         
         # Try new command first (hf download)
         new_cmd = ["hf", "download", model_repo, "--local-dir", local_dir]
