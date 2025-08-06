@@ -1,171 +1,372 @@
 """
-Media settings page for audio/subtitle track selection.
+Media settings page for configuring audio track and subtitle selection.
 """
 import streamlit as st
 from pathlib import Path
 from core.media_selector import MediaTrackSelector
 
-def show_media_settings_for_video(video_path: str):
-    """Show media track selection interface for a specific video."""
-    
-    st.subheader("🎵 Audio & Subtitle Selection")
-    
-    # Initialize media selector
-    selector = MediaTrackSelector()
-    
-    # Get stream information
-    ui_info = selector.get_stream_info_for_ui(video_path)
-    
-    if not ui_info.get('has_multiple_options', False):
-        st.info("This video has standard single audio track configuration.")
-        return {'audio_track': 0, 'subtitle_track': None}
-    
-    st.markdown(f"**Video:** `{Path(video_path).name}`")
-    
-    # Audio track selection
-    st.markdown("### 🔊 Audio Track Selection")
-    
-    if len(ui_info['audio_options']) > 1:
-        audio_descriptions = [opt['description'] for opt in ui_info['audio_options']]
-        audio_values = [opt['value'] for opt in ui_info['audio_options']]
-        
-        default_audio_idx = 0
-        recommended_audio = ui_info.get('recommended_audio', 0)
-        
-        # Find index of recommended audio
-        for i, opt in enumerate(ui_info['audio_options']):
-            if opt['value'] == recommended_audio:
-                default_audio_idx = i
-                break
-        
-        selected_audio_idx = st.selectbox(
-            "Choose audio track:",
-            range(len(audio_descriptions)),
-            index=default_audio_idx,
-            format_func=lambda x: audio_descriptions[x],
-            help="Select which audio track to use for transcription and final summary"
-        )
-        
-        selected_audio = audio_values[selected_audio_idx]
-        
-        if selected_audio == recommended_audio:
-            st.success("✅ Using recommended audio track")
-        else:
-            st.info("ℹ️ Using custom audio track selection")
-            
-    else:
-        selected_audio = ui_info['audio_options'][0]['value'] if ui_info['audio_options'] else 0
-        st.write("Single audio track detected - using default")
-    
-    # Subtitle track selection
-    st.markdown("### 📝 Subtitle Selection")
-    
-    if len(ui_info['subtitle_options']) > 1:
-        subtitle_descriptions = [opt['description'] for opt in ui_info['subtitle_options']]
-        subtitle_values = [opt['value'] for opt in ui_info['subtitle_options']]
-        
-        default_subtitle_idx = 0
-        recommended_subtitle = ui_info.get('recommended_subtitle')
-        
-        # Find index of recommended subtitle
-        if recommended_subtitle:
-            for i, opt in enumerate(ui_info['subtitle_options']):
-                if opt['value'] == recommended_subtitle:
-                    default_subtitle_idx = i
-                    break
-        
-        selected_subtitle_idx = st.selectbox(
-            "Choose subtitle track:",
-            range(len(subtitle_descriptions)),
-            index=default_subtitle_idx,
-            format_func=lambda x: subtitle_descriptions[x],
-            help="Select subtitle track to include in summary (optional)"
-        )
-        
-        selected_subtitle = subtitle_values[selected_subtitle_idx]
-        
-        if selected_subtitle == recommended_subtitle:
-            st.success("✅ Using recommended subtitle track")
-        elif selected_subtitle is None:
-            st.info("ℹ️ No subtitles will be included")
-        else:
-            st.info("ℹ️ Using custom subtitle selection")
-            
-    else:
-        selected_subtitle = None
-        st.write("No subtitles available")
-    
-    # Preview section
-    with st.expander("🔍 Track Information Preview"):
-        st.markdown("**Selected Configuration:**")
-        st.write(f"- Audio Track: {audio_descriptions[selected_audio_idx] if 'selected_audio_idx' in locals() else 'Default'}")
-        st.write(f"- Subtitle Track: {subtitle_descriptions[selected_subtitle_idx] if 'selected_subtitle_idx' in locals() and selected_subtitle else 'None'}")
-    
-    return {
-        'audio_track': selected_audio,
-        'subtitle_track': selected_subtitle
-    }
-
 def show_batch_media_settings(video_list):
-    """Show media settings for batch processing."""
+    """Show batch media settings for multiple videos."""
     
-    st.subheader("🎵 Batch Audio & Subtitle Settings")
+    st.subheader("🎵 Audio & Subtitle Settings")
     
-    st.markdown("### Default Track Selection Strategy")
-    
+    # Global strategy selection
     col1, col2 = st.columns(2)
     
     with col1:
+        st.write("**Audio Track Strategy:**")
         audio_strategy = st.selectbox(
-            "Audio Track Strategy:",
+            "How to select audio tracks:",
             [
-                "Recommended (Default/English/Most Channels)",
-                "Always First Track",
+                "Auto (Recommended)",
                 "Prefer English",
-                "Most Channels (Surround Sound)",
+                "Most Channels First", 
                 "Manual Selection Per Video"
             ],
-            help="How to automatically select audio tracks for batch processing"
+            help="Auto selects the best track automatically"
         )
     
     with col2:
+        st.write("**Subtitle Strategy:**")
         subtitle_strategy = st.selectbox(
-            "Subtitle Strategy:",
+            "How to handle subtitles:",
             [
-                "Recommended (Default/English)",
-                "No Subtitles", 
-                "Always First Available",
-                "Prefer English",
+                "Auto Detect",
+                "English Only", 
+                "No Subtitles",
                 "Manual Selection Per Video"
             ],
-            help="How to handle subtitles in batch processing"
+            help="Auto Detect finds the best available subtitles"
         )
     
-    # Preview settings for first few videos
-    if video_list and len(video_list) > 0:
-        st.markdown("### 📋 Preview: First 3 Videos")
+    # Advanced options
+    with st.expander("🔧 Advanced Audio/Subtitle Options"):
+        
+        col1, col2 = st.columns(2)
+        
+        with col1:
+            st.write("**Audio Preferences:**")
+            preferred_languages = st.multiselect(
+                "Preferred Languages",
+                ["en", "es", "fr", "de", "it", "pt", "ja", "ko", "zh"],
+                default=["en"],
+                help="Language priority for audio tracks"
+            )
+            
+            min_channels = st.slider(
+                "Minimum Audio Channels", 
+                1, 8, 2,
+                help="Prefer tracks with at least this many channels"
+            )
+        
+        with col2:
+            st.write("**Subtitle Preferences:**")
+            subtitle_formats = st.multiselect(
+                "Allowed Subtitle Formats",
+                ["srt", "vtt", "ass", "ssa"],
+                default=["srt", "vtt"],
+                help="Which subtitle formats to consider"
+            )
+            
+            force_subtitles = st.checkbox(
+                "Force Subtitles",
+                help="Require subtitles for processing"
+            )
+    
+    # Preview for first few videos
+    if len(video_list) > 0:
+        st.write("**Preview for first 3 videos:**")
         
         selector = MediaTrackSelector()
         
         for i, video in enumerate(video_list[:3]):
             with st.expander(f"📹 {Path(video['file_path']).name}"):
-                ui_info = selector.get_stream_info_for_ui(video['file_path'])
-                
-                if ui_info.get('has_multiple_options'):
-                    st.write("**Available Audio Tracks:**")
-                    for audio_opt in ui_info['audio_options']:
-                        marker = "🎯" if audio_opt['value'] == ui_info.get('recommended_audio') else "  "
-                        st.write(f"{marker} {audio_opt['description']}")
+                try:
+                    # Analyze tracks
+                    tracks = selector.analyze_media_tracks(video['file_path'])
                     
-                    if len(ui_info['subtitle_options']) > 1:
-                        st.write("**Available Subtitle Tracks:**")
-                        for sub_opt in ui_info['subtitle_options']:
-                            marker = "🎯" if sub_opt['value'] == ui_info.get('recommended_subtitle') else "  "
-                            st.write(f"{marker} {sub_opt['description']}")
-                else:
-                    st.info("Standard single-track configuration")
+                    if tracks.get('audio_tracks'):
+                        st.write("**Available Audio Tracks:**")
+                        for j, track in enumerate(tracks['audio_tracks']):
+                            lang = track.get('language', 'unknown')
+                            channels = track.get('channels', 'unknown')
+                            codec = track.get('codec_name', 'unknown')
+                            st.write(f"- Track {j}: {codec} ({channels} channels, {lang})")
+                    
+                    if tracks.get('subtitle_tracks'):
+                        st.write("**Available Subtitles:**")
+                        for j, sub in enumerate(tracks['subtitle_tracks']):
+                            lang = sub.get('language', 'unknown')
+                            format_name = sub.get('codec_name', 'unknown')
+                            st.write(f"- Track {j}: {format_name} ({lang})")
+                    
+                    if tracks.get('external_subtitles'):
+                        st.write("**External Subtitles:**")
+                        for sub_file in tracks['external_subtitles']:
+                            st.write(f"- {Path(sub_file).name}")
+                
+                except Exception as e:
+                    st.warning(f"Could not analyze tracks: {e}")
     
+    # Return settings dictionary
     return {
         'audio_strategy': audio_strategy,
-        'subtitle_strategy': subtitle_strategy
+        'subtitle_strategy': subtitle_strategy,
+        'preferred_languages': preferred_languages,
+        'min_channels': min_channels,
+        'subtitle_formats': subtitle_formats,
+        'force_subtitles': force_subtitles
     }
+
+def show_media_settings_for_video(video_path):
+    """Show individual media settings for a single video."""
+    
+    st.write(f"**Media Settings for {Path(video_path).name}:**")
+    
+    selector = MediaTrackSelector()
+    
+    try:
+        # Analyze the video
+        tracks = selector.analyze_media_tracks(video_path)
+        
+        col1, col2 = st.columns(2)
+        
+        with col1:
+            st.write("**Audio Track Selection:**")
+            
+            if tracks.get('audio_tracks'):
+                audio_options = []
+                for i, track in enumerate(tracks['audio_tracks']):
+                    lang = track.get('language', 'unknown')
+                    channels = track.get('channels', 'unknown') 
+                    codec = track.get('codec_name', 'unknown')
+                    label = f"Track {i}: {codec} ({channels} ch, {lang})"
+                    audio_options.append((i, label))
+                
+                # Auto-select best track
+                recommended = selector.select_best_audio_track(tracks['audio_tracks'])
+                recommended_idx = 0
+                if recommended:
+                    for i, track in enumerate(tracks['audio_tracks']):
+                        if track == recommended:
+                            recommended_idx = i
+                            break
+                
+                selected_audio = st.selectbox(
+                    "Choose Audio Track:",
+                    options=[opt[0] for opt in audio_options],
+                    format_func=lambda x: [opt[1] for opt in audio_options if opt[0] == x][0],
+                    index=recommended_idx
+                )
+            else:
+                st.warning("No audio tracks found")
+                selected_audio = None
+        
+        with col2:
+            st.write("**Subtitle Selection:**")
+            
+            subtitle_options = [(-1, "No Subtitles")]
+            
+            # Internal subtitles
+            if tracks.get('subtitle_tracks'):
+                for i, sub in enumerate(tracks['subtitle_tracks']):
+                    lang = sub.get('language', 'unknown')
+                    format_name = sub.get('codec_name', 'unknown')
+                    label = f"Internal {i}: {format_name} ({lang})"
+                    subtitle_options.append((f"internal_{i}", label))
+            
+            # External subtitles
+            if tracks.get('external_subtitles'):
+                for i, sub_file in enumerate(tracks['external_subtitles']):
+                    label = f"External: {Path(sub_file).name}"
+                    subtitle_options.append((f"external_{sub_file}", label))
+            
+            selected_subtitle = st.selectbox(
+                "Choose Subtitles:",
+                options=[opt[0] for opt in subtitle_options],
+                format_func=lambda x: [opt[1] for opt in subtitle_options if opt[0] == x][0],
+                index=0
+            )
+        
+        # Show selected configuration
+        st.info(f"Selected: Audio track {selected_audio}, Subtitles: {selected_subtitle}")
+        
+        return {
+            'audio_track': selected_audio,
+            'subtitle_track': selected_subtitle,
+            'video_path': video_path
+        }
+        
+    except Exception as e:
+        st.error(f"Error analyzing video tracks: {e}")
+        return {
+            'audio_track': 0,
+            'subtitle_track': -1,
+            'video_path': video_path
+        }
+
+def show_media_settings_page():
+    """Main media settings configuration page."""
+    
+    st.header("🎵 Media Track Settings")
+    
+    st.write("""
+    Configure how the system selects audio tracks and subtitles from your video files.
+    These settings apply to video processing and summarization.
+    """)
+    
+    # Default strategies
+    st.subheader("🎯 Default Selection Strategies")
+    
+    col1, col2 = st.columns(2)
+    
+    with col1:
+        st.write("**Audio Track Strategy:**")
+        default_audio = st.selectbox(
+            "Default audio selection:",
+            [
+                "Auto (Best Quality)",
+                "Prefer English",
+                "Most Channels First",
+                "First Track"
+            ]
+        )
+        
+        st.write("**Audio Quality Preferences:**")
+        prefer_lossless = st.checkbox("Prefer lossless audio (FLAC, PCM)")
+        min_sample_rate = st.slider("Minimum sample rate (Hz)", 16000, 96000, 44100)
+    
+    with col2:
+        st.write("**Subtitle Strategy:**")
+        default_subtitle = st.selectbox(
+            "Default subtitle selection:",
+            [
+                "Auto Detect Best",
+                "English Only",
+                "External Files First", 
+                "No Subtitles"
+            ]
+        )
+        
+        st.write("**Subtitle Format Preferences:**")
+        subtitle_priority = st.multiselect(
+            "Format priority (first = highest priority):",
+            ["srt", "vtt", "ass", "ssa"],
+            default=["srt", "vtt"]
+        )
+    
+    # Language preferences
+    st.subheader("🌍 Language Preferences")
+    
+    col1, col2 = st.columns(2)
+    
+    with col1:
+        audio_languages = st.multiselect(
+            "Preferred audio languages (priority order):",
+            ["en", "es", "fr", "de", "it", "pt", "ru", "ja", "ko", "zh"],
+            default=["en"]
+        )
+    
+    with col2:
+        subtitle_languages = st.multiselect(
+            "Preferred subtitle languages:",
+            ["en", "es", "fr", "de", "it", "pt", "ru", "ja", "ko", "zh"],
+            default=["en"]
+        )
+    
+    # Advanced settings
+    st.subheader("🔧 Advanced Settings")
+    
+    with st.expander("🎛️ Advanced Audio/Video Options"):
+        
+        col1, col2 = st.columns(2)
+        
+        with col1:
+            st.write("**Audio Processing:**")
+            normalize_audio = st.checkbox("Normalize audio levels", value=True)
+            audio_bitrate_min = st.slider("Minimum audio bitrate (kbps)", 64, 320, 128)
+            
+            st.write("**Channel Configuration:**")
+            downmix_surround = st.checkbox("Downmix surround to stereo", value=True)
+            preserve_surround = st.checkbox("Preserve original surround when possible")
+        
+        with col2:
+            st.write("**Subtitle Processing:**")
+            extract_subtitles = st.checkbox("Extract subtitles for analysis", value=True)
+            clean_subtitle_text = st.checkbox("Clean subtitle formatting", value=True)
+            
+            st.write("**External Files:**")
+            search_subtitle_files = st.checkbox("Search for external subtitle files", value=True)
+            subtitle_search_radius = st.slider("Search radius (parent directories)", 0, 3, 1)
+    
+    # Test section
+    st.subheader("🧪 Test Settings")
+    
+    test_video = st.file_uploader(
+        "Upload a test video to preview track selection:",
+        type=['mp4', 'mkv', 'avi', 'mov'],
+        help="Upload a video file to test your settings"
+    )
+    
+    if test_video:
+        # Save temporarily and analyze
+        temp_path = Path("temp") / test_video.name
+        temp_path.parent.mkdir(exist_ok=True)
+        
+        with open(temp_path, 'wb') as f:
+            f.write(test_video.read())
+        
+        st.write("**Analysis Results:**")
+        
+        selector = MediaTrackSelector()
+        try:
+            tracks = selector.analyze_media_tracks(str(temp_path))
+            
+            # Show what would be selected
+            if tracks.get('audio_tracks'):
+                best_audio = selector.select_best_audio_track(tracks['audio_tracks'])
+                st.success(f"Would select audio: {best_audio.get('codec_name', 'unknown')} ({best_audio.get('channels', 'unknown')} channels)")
+            
+            if tracks.get('subtitle_tracks') or tracks.get('external_subtitles'):
+                best_subtitle = selector.select_best_subtitle_track(
+                    tracks.get('subtitle_tracks', []),
+                    tracks.get('external_subtitles', [])
+                )
+                if best_subtitle:
+                    st.success(f"Would select subtitle: {best_subtitle}")
+                else:
+                    st.info("No suitable subtitles found")
+            
+        except Exception as e:
+            st.error(f"Error analyzing test video: {e}")
+        
+        finally:
+            # Clean up temp file
+            try:
+                temp_path.unlink()
+            except:
+                pass
+    
+    # Save settings
+    if st.button("💾 Save Settings", type="primary"):
+        settings = {
+            'default_audio_strategy': default_audio,
+            'default_subtitle_strategy': default_subtitle,
+            'prefer_lossless': prefer_lossless,
+            'min_sample_rate': min_sample_rate,
+            'subtitle_priority': subtitle_priority,
+            'audio_languages': audio_languages,
+            'subtitle_languages': subtitle_languages,
+            'normalize_audio': normalize_audio,
+            'audio_bitrate_min': audio_bitrate_min,
+            'downmix_surround': downmix_surround,
+            'preserve_surround': preserve_surround,
+            'extract_subtitles': extract_subtitles,
+            'clean_subtitle_text': clean_subtitle_text,
+            'search_subtitle_files': search_subtitle_files,
+            'subtitle_search_radius': subtitle_search_radius
+        }
+        
+        # Store in session state
+        st.session_state.media_settings = settings
+        st.success("Media settings saved!")
