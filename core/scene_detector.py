@@ -73,6 +73,9 @@ class SceneDetector:
             # Filter scenes by minimum length
             scenes = self._filter_scenes_by_length(scenes)
             
+            # Remove credits from scenes
+            scenes = self._filter_credits_scenes(scenes, video_path)
+            
             logger.info(f"Detected {len(scenes)} scenes")
             return scenes
             
@@ -153,6 +156,65 @@ class SceneDetector:
         
         logger.info(f"Filtered {len(scenes) - len(filtered_scenes)} short scenes")
         return filtered_scenes
+    
+    def _filter_credits_scenes(self, scenes: List[Dict], video_path: Path) -> List[Dict]:
+        """Remove opening and closing credits from scenes."""
+        if not scenes:
+            return scenes
+        
+        # Get video duration for percentage calculations
+        video_duration = self._get_video_duration(video_path)
+        if not video_duration:
+            return scenes
+        
+        filtered_scenes = []
+        
+        for scene in scenes:
+            scene_start_percent = scene['start_time'] / video_duration
+            scene_end_percent = scene['end_time'] / video_duration
+            
+            # Skip opening credits (first 8% of movie)
+            if scene_end_percent < 0.08:
+                logger.info(f"Skipping opening credits scene: {scene['start_time']:.1f}s - {scene['end_time']:.1f}s")
+                continue
+            
+            # Skip closing credits (last 15% of movie)  
+            if scene_start_percent > 0.85:
+                logger.info(f"Skipping closing credits scene: {scene['start_time']:.1f}s - {scene['end_time']:.1f}s")
+                continue
+            
+            # Also skip very long scenes at the end (likely credits)
+            if (scene_start_percent > 0.80 and 
+                scene['duration'] > 300):  # 5+ minute scene in last 20%
+                logger.info(f"Skipping long end scene (likely credits): {scene['start_time']:.1f}s - {scene['end_time']:.1f}s")
+                continue
+            
+            filtered_scenes.append(scene)
+        
+        credits_removed = len(scenes) - len(filtered_scenes)
+        if credits_removed > 0:
+            logger.info(f"Removed {credits_removed} credits scenes from {len(scenes)} total scenes")
+        
+        return filtered_scenes
+    
+    def _get_video_duration(self, video_path: Path) -> Optional[float]:
+        """Get video duration in seconds using OpenCV."""
+        try:
+            cap = cv2.VideoCapture(str(video_path))
+            if not cap.isOpened():
+                return None
+            
+            fps = cap.get(cv2.CAP_PROP_FPS)
+            frame_count = cap.get(cv2.CAP_PROP_FRAME_COUNT)
+            cap.release()
+            
+            if fps > 0:
+                return frame_count / fps
+            return None
+            
+        except Exception as e:
+            logger.warning(f"Could not get video duration: {e}")
+            return None
     
     def calculate_scene_importance(self, scenes: List[Dict], 
                                  transcription_data: List[Dict] = None) -> List[Dict]:

@@ -63,6 +63,7 @@ if 'initialized' not in st.session_state:
     st.session_state.plex_integration = PlexIntegration()
     st.session_state.processing_status = {}
     st.session_state.selected_videos = []
+    st.session_state.custom_output_dir = None
     st.session_state.initialized = True
 
 def update_progress_callback(progress_data):
@@ -1303,6 +1304,60 @@ def show_export_center_page():
 def show_settings_page():
     """Display application settings and configuration."""
     st.header("⚙️ Settings")
+    
+    # Output Directory Configuration
+    st.subheader("📁 Output Directory")
+    
+    col1, col2 = st.columns([3, 1])
+    
+    with col1:
+        current_output = st.session_state.custom_output_dir or str(config.OUTPUT_DIR)
+        new_output_dir = st.text_input(
+            "Output Directory Path:",
+            value=current_output,
+            help="Directory where summaries, bookmarks, and exports will be saved"
+        )
+    
+    with col2:
+        st.write("**Current Status:**")
+        if Path(current_output).exists():
+            st.success("✅ Directory exists")
+        else:
+            st.error("❌ Directory not found")
+    
+    col1, col2, col3 = st.columns(3)
+    
+    with col1:
+        if st.button("📂 Browse Directory", use_container_width=True):
+            st.info("Use the text input above to specify your desired output directory")
+    
+    with col2:
+        if st.button("💾 Save Settings", use_container_width=True):
+            if new_output_dir != current_output:
+                try:
+                    Path(new_output_dir).mkdir(parents=True, exist_ok=True)
+                    st.session_state.custom_output_dir = new_output_dir
+                    st.success(f"✅ Output directory updated: {new_output_dir}")
+                    st.rerun()
+                except Exception as e:
+                    st.error(f"❌ Failed to create directory: {e}")
+    
+    with col3:
+        if st.button("🔄 Reset to Default", use_container_width=True):
+            st.session_state.custom_output_dir = None
+            st.success("✅ Reset to default output directory")
+            st.rerun()
+    
+    # Directory Structure
+    with st.expander("📊 Output Directory Structure"):
+        output_path = Path(st.session_state.custom_output_dir or config.OUTPUT_DIR)
+        st.code(f"""
+{output_path}/
+├── summaries/          # Video summary files (.mp4)
+├── bookmarks/          # VLC bookmark files (.xspf)
+├── exports/            # JSON and markdown exports
+└── reports/            # Processing reports
+        """, language="text")
     
     st.subheader("Processing Configuration")
     

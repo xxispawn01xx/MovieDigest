@@ -274,7 +274,14 @@ class VideoSummarizer:
     
     def _create_video_summary(self, video_path: Path, selected_scenes: List[Dict]) -> Path:
         """Create the actual video summary file."""
-        output_dir = config.OUTPUT_DIR / "summaries"
+        # Use custom output directory if set in session state
+        import streamlit as st
+        if hasattr(st, 'session_state') and hasattr(st.session_state, 'custom_output_dir') and st.session_state.custom_output_dir:
+            base_output_dir = Path(st.session_state.custom_output_dir)
+        else:
+            base_output_dir = config.OUTPUT_DIR
+            
+        output_dir = base_output_dir / "summaries"
         output_dir.mkdir(parents=True, exist_ok=True)
         
         timestamp = datetime.now().strftime("%Y%m%d_%H%M%S")
@@ -309,18 +316,19 @@ class VideoSummarizer:
                 '-i', str(video_path)
             ])
         
-        # Simple concat filter
+        # Simple concat filter with subtitle preservation
         if len(selected_scenes) == 1:
             # Single scene - no concatenation needed
             cmd.extend([
                 '-c:v', 'libx264',
                 '-c:a', 'aac',
+                '-c:s', 'mov_text',  # Preserve subtitles
                 '-avoid_negative_ts', 'make_zero',
                 '-y',
                 str(summary_path)
             ])
         else:
-            # Multiple scenes - concatenate
+            # Multiple scenes - concatenate with subtitle support
             filter_str = ''.join([f'[{i}:v][{i}:a]' for i in range(len(selected_scenes))])
             filter_str += f'concat=n={len(selected_scenes)}:v=1:a=1[outv][outa]'
             
@@ -328,8 +336,10 @@ class VideoSummarizer:
                 '-filter_complex', filter_str,
                 '-map', '[outv]',
                 '-map', '[outa]',
+                '-map', '0:s?',  # Map subtitles if present
                 '-c:v', 'libx264',
-                '-c:a', 'aac',
+                '-c:a', 'aac', 
+                '-c:s', 'mov_text',  # Preserve subtitles in MP4
                 '-avoid_negative_ts', 'make_zero',
                 '-y',
                 str(summary_path)
@@ -372,11 +382,19 @@ class VideoSummarizer:
     def _create_vlc_bookmarks(self, video_path: Path, selected_scenes: List[Dict],
                              narrative_analysis: Dict) -> Path:
         """Create VLC bookmark file for the original video."""
-        output_dir = config.OUTPUT_DIR / "bookmarks"
+        # Use custom output directory if set in session state
+        import streamlit as st
+        if hasattr(st, 'session_state') and hasattr(st.session_state, 'custom_output_dir') and st.session_state.custom_output_dir:
+            base_output_dir = Path(st.session_state.custom_output_dir)
+        else:
+            base_output_dir = config.OUTPUT_DIR
+            
+        output_dir = base_output_dir / "bookmarks"
         output_dir.mkdir(parents=True, exist_ok=True)
         
         timestamp = datetime.now().strftime("%Y%m%d_%H%M%S")
-        bookmark_path = output_dir / f"{video_path.stem}_bookmarks_{timestamp}.xspf"
+        # Create bookmark with same name as video for VLC auto-detection
+        bookmark_path = output_dir / f"{video_path.stem}.xspf"
         
         logger.info(f"Creating VLC bookmarks: {bookmark_path.name}")
         
@@ -386,7 +404,7 @@ class VideoSummarizer:
         with open(bookmark_path, 'w', encoding='utf-8') as f:
             f.write(xspf_content)
         
-        # Also create a simple instruction file
+        # Also create a simple instruction file  
         instruction_path = output_dir / f"{video_path.stem}_INSTRUCTIONS.txt"
         instructions = f"""VLC BOOKMARK INSTRUCTIONS for {video_path.name}
 {'='*60}
