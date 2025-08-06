@@ -435,8 +435,9 @@ def show_queue_page():
     
     with col2:
         if st.button("🗑️ Clear Queue", use_container_width=True):
-            st.session_state.batch_processor.clear_queue()
-            st.success("Queue cleared")
+            # Clear both the in-memory queue and database queue status
+            cleared_count = st.session_state.batch_processor.clear_queue()
+            st.success(f"Queue cleared - {cleared_count} videos removed from queue")
             st.rerun()
     
     with col3:

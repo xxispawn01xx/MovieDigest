@@ -446,14 +446,19 @@ class BatchProcessor:
         return usage
     
     def clear_queue(self):
-        """Clear the processing queue."""
+        """Clear both the in-memory processing queue and database queue status."""
+        # Clear in-memory queue
         while not self.processing_queue.empty():
             try:
                 self.processing_queue.get_nowait()
             except queue.Empty:
                 break
         
-        logger.info("Processing queue cleared")
+        # Also clear queued status in database
+        cleared_count = self.db.clear_all_queued_videos()
+        
+        logger.info(f"Processing queue cleared - {cleared_count} videos updated in database")
+        return cleared_count
     
     def add_video_to_queue_by_id(self, video_id: int) -> bool:
         """Add a video to processing queue by database ID."""
@@ -526,14 +531,14 @@ class BatchProcessor:
     
     def get_queue_summary(self) -> Dict:
         """Get summary of videos in the processing queue."""
-        # This is a simplified version since we can't peek into the queue
-        # In a real implementation, you might want to use a different data structure
-        
+        # Get actual queued count from database for accurate display
+        queued_videos = self.db.get_videos_by_status('queued')
         db_stats = self.db.get_processing_stats()
         
         return {
-            'total_in_queue': self.processing_queue.qsize(),
+            'total_in_queue': len(queued_videos),
             'database_stats': db_stats,
             'batch_size': self.current_batch_size,
-            'max_batch_size': self.max_batch_size
+            'max_batch_size': self.max_batch_size,
+            'is_processing': self.is_processing
         }
