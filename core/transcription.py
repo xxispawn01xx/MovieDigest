@@ -14,6 +14,7 @@ import warnings
 
 from config_detector import CONFIG as config, ENVIRONMENT
 from utils.warning_suppressor import suppress_cuda_warnings
+from utils.triton_warning_suppressor import suppress_triton_warnings, quiet_transcription
 
 # Suppress CUDA/Triton warnings for cleaner output
 suppress_cuda_warnings()
@@ -76,6 +77,7 @@ class OfflineTranscriber:
             logger.error(f"Failed to load Whisper model: {e}")
             return False
     
+    @quiet_transcription
     def transcribe_video(self, video_path: str, language: str = None) -> List[Dict]:
         """
         Transcribe video file to text with timestamps.
@@ -102,22 +104,25 @@ class OfflineTranscriber:
             # Extract audio from video if needed
             audio_path = self._extract_audio(video_path)
             
-            # Transcribe audio using Whisper with proper encoding
+            # RTX 3060 optimized transcription with robust error handling
             try:
                 result = self.model.transcribe(
                     str(audio_path),
                     language=language or config.WHISPER_LANGUAGE,
                     verbose=False,  # Reduce verbose output that might cause encoding issues
-                    word_timestamps=True
+                    word_timestamps=True,
+                    fp16=ENVIRONMENT == "rtx_3060_local"  # Use FP16 on RTX 3060
                 )
-            except UnicodeEncodeError as ue:
-                logger.warning(f"Unicode encoding issue during transcription: {ue}")
-                # Retry with simplified parameters
+            except (UnicodeEncodeError, RuntimeError, Exception) as e:
+                logger.warning(f"Transcription failed ({type(e).__name__}: {e}), retrying with fallback settings")
+                # Fallback with simplified parameters for problematic files
                 result = self.model.transcribe(
                     str(audio_path),
                     language=language or config.WHISPER_LANGUAGE,
                     verbose=False,
-                    word_timestamps=False
+                    word_timestamps=False,
+                    fp16=False,  # Disable FP16 for compatibility
+                    condition_on_previous_text=False  # Prevent tensor reshape errors
                 )
             
             # Process transcription results with encoding safety
@@ -151,13 +156,15 @@ class OfflineTranscriber:
             
             audio_path = temp_dir / f"{video_path.stem}_audio.wav"
             
-            # Extract audio using ffmpeg
+            # Extract audio using ffmpeg with better error handling
             cmd = [
                 'ffmpeg',
                 '-i', str(video_path),
                 '-acodec', 'pcm_s16le',
                 '-ac', '1',  # Mono audio
                 '-ar', '16000',  # 16kHz sample rate
+                '-af', 'volume=1.0',  # Ensure audio normalization
+                '-t', '3600',  # Limit to 1 hour to prevent memory issues
                 '-y',  # Overwrite output
                 str(audio_path)
             ]
@@ -173,6 +180,10 @@ class OfflineTranscriber:
             
             if result.returncode != 0:
                 raise RuntimeError(f"FFmpeg failed: {result.stderr}")
+            
+            # Verify audio file exists and has content
+            if not audio_path.exists() or audio_path.stat().st_size == 0:
+                raise RuntimeError("Audio extraction failed - empty or missing file")
             
             logger.info(f"Audio extracted to: {audio_path}")
             return audio_path

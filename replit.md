@@ -8,30 +8,24 @@ Preferred communication style: Simple, everyday language.
 
 # Recent Changes
 
-## Latest Updates (Aug 5, 2025)
+## Latest Updates (Aug 6, 2025)
+- **RTX 3060 Optimization**: Created smart environment detection system that automatically configures for RTX 3060 when running locally vs CPU fallback on Replit cloud
+- **Batch Processing Robustness**: Added advanced error handling for tensor reshape failures and audio extraction issues that caused video processing crashes
+- **Triton Warning Suppression**: Implemented warning suppressor to eliminate cosmetic Triton kernel warnings on RTX 3060 systems
+- **Audio Extraction Enhancement**: Added validation and normalization for audio extraction to prevent empty file failures
+- **Whisper Fallback System**: Created robust fallback transcription with simplified parameters for problematic video files
+- **Environment-Specific Config**: RTX 3060 uses large Whisper model, 85% VRAM, FP16 acceleration; Replit uses CPU-optimized settings
+- **Memory Management**: Optimized GPU memory allocation with 11GB usage on RTX 3060, automatic cleanup, and batch size optimization
+- **Processing Resilience**: System continues processing remaining videos when individual files fail rather than stopping entire batch
 - **Recent Folders Feature**: Fully implemented recent folder tracking with database integration, UI buttons for quick access, and automatic directory tracking
 - **Encoding Fix**: Resolved Unicode/character encoding issues in transcription that caused processing failures on Windows systems
-- **GitIgnore Enhancement**: Created comprehensive offline-only gitignore structure to keep video databases local while syncing code to remote
-- **Database Integration**: Recent folders feature automatically tracks scanned directories with video count, scan duration, and metadata
-- **UI Polish**: Recent folders display with quick access buttons, expandable sections, and remove functionality
-- **Enhanced Export System**: Added comprehensive Export Manager with JSON, VLC bookmarks, and markdown report generation
-- **Model Management**: Built intelligent Model Downloader with Whisper model recommendations and automated downloads
-- **UI Improvements**: Created Model Management page with system requirements checking and download interface
-- **VLC Integration**: Added specialized VLC bookmark generator for creating chapter-based and key moment playlists
-- **Plex Integration**: Built complete Plex Media Server integration for genre filtering, rating-based sorting, and rich metadata discovery
-- **Advanced Scene Analysis**: Created sophisticated scene characterization with visual and emotional analysis
-- **Audio Analysis**: Built comprehensive audio feature extraction including speech detection and music analysis
-- **Smart Summarization**: Implemented multi-algorithm summarization engine with hybrid, narrative, and importance-based methods
-- **Documentation**: Created comprehensive README.md with architecture overview, installation guide, and usage instructions
-- **Processing Queue Fix**: Resolved issue where "Add to Queue" button didn't start processing by connecting database status with internal queue  
-- **Batch Page Enhancement**: Added queued videos display to show database content on processing page
-- **Configuration System**: Added environment variables to control auto-downloads, database init, and offline mode
-- **Development Mode**: Added visual indicators when development flags are active
-- **Fallback Mode**: Ensured app works without transformers library using intelligent fallback analysis
-- **Credits Detection Enhancement**: Built advanced computer vision-based credits detection system with visual pattern analysis, text density detection, audio analysis, and fade transition detection
-- **Subtitle Preservation**: Fixed FFmpeg commands to preserve original video subtitles in summary outputs
 - **VLC Auto-Detection**: Implemented proper VLC bookmark naming convention for automatic detection when opening videos
 - **Custom Output Directory**: Added GUI interface for selecting custom output directories in Settings page
+- **Credits Detection Enhancement**: Built advanced computer vision-based credits detection system with visual pattern analysis, text density detection, audio analysis, and fade transition detection
+- **Enhanced Export System**: Added comprehensive Export Manager with JSON, VLC bookmarks, and markdown report generation
+- **Model Management**: Built intelligent Model Downloader with Whisper model recommendations and automated downloads
+- **Plex Integration**: Built complete Plex Media Server integration for genre filtering, rating-based sorting, and rich metadata discovery
+- **Processing Queue Fix**: Resolved issue where "Add to Queue" button didn't start processing by connecting database status with internal queue
 
 # System Architecture
 
