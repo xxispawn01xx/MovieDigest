@@ -160,10 +160,23 @@ def show_model_manager():
         model_path = Path("models/local_llm")
         is_installed = False
         
-        if model_path.exists():
-            # Look for actual model files (safetensors, bin, or config files)
-            model_files = list(model_path.glob("*.safetensors")) + list(model_path.glob("*.bin")) + list(model_path.glob("config.json"))
-            is_installed = len(model_files) > 0
+        if model_path.exists() and model_path.is_dir():
+            # Look for actual model files recursively (safetensors, bin, or config files)
+            model_files = (list(model_path.rglob("*.safetensors")) + 
+                          list(model_path.rglob("*.bin")) + 
+                          list(model_path.rglob("config.json")) +
+                          list(model_path.rglob("pytorch_model.bin")))
+            
+            # Filter out empty files and calculate total size
+            valid_files = [f for f in model_files if f.exists() and f.stat().st_size > 0]
+            total_size = sum(f.stat().st_size for f in valid_files)
+            
+            # Only consider installed if we have:
+            # 1. At least one model file
+            # 2. Total size > 10MB (to avoid detecting leftover config files)
+            # 3. At least one substantial file > 1MB
+            has_substantial_file = any(f.stat().st_size > 1024 * 1024 for f in valid_files)
+            is_installed = len(valid_files) > 0 and total_size > 10 * 1024 * 1024 and has_substantial_file
         
         # Header with status badge
         header_text = f"{'⭐ ' if model['recommended'] else ''}{model['name']} - {model['size']}"
