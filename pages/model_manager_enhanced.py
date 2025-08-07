@@ -9,11 +9,27 @@ import json
 import os
 import shutil
 import glob
-from core.model_downloader import ModelDownloader
+# Import from core module with fallback
+try:
+    from core.model_downloader import ModelDownloader
+except ImportError:
+    # Simple fallback for standalone testing
+    class ModelDownloader:
+        def get_installed_models(self):
+            return []
+        def get_model_info(self, model_name):
+            return {"size": "Unknown", "status": "Not found"}
 
-# Add utils to path for importing
-sys.path.append(str(Path(__file__).parent.parent))
-from utils.windows_encoding_fix import fix_huggingface_cli_download
+# Add root path for importing
+root_path = Path(__file__).parent.parent
+sys.path.insert(0, str(root_path))
+
+# Import from core module
+try:
+    from utils.windows_encoding_fix import fix_huggingface_cli_download
+except ImportError:
+    def fix_huggingface_cli_download(command):
+        return command
 
 def show_model_manager():
     """Display the enhanced model management interface with one-click downloads."""
@@ -71,7 +87,7 @@ def show_model_manager():
     
     try:
         installed_models = len([f for f in Path("models").rglob("*") if f.is_file()]) if Path("models").exists() else 0
-        available_storage = shutil.disk_usage(".")[2] / (1024**3)  # GB
+        available_storage = shutil.disk_usage(str(root_path))[2] / (1024**3)  # GB
         
         with col1:
             st.metric("Model Files", installed_models)
@@ -499,7 +515,7 @@ def show_model_manager():
         with req_col2:
             st.write("**Hardware:**")
             try:
-                available_storage = shutil.disk_usage(".")[2] / (1024**3)
+                available_storage = shutil.disk_usage(str(root_path))[2] / (1024**3)
                 st.write(f"💾 Available Storage: {available_storage:.1f} GB")
             except:
                 st.write("💾 Available Storage: Unknown")

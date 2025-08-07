@@ -20,6 +20,10 @@ author = "agent"
 task = "workflow.run"
 args = "Video Summarization App"
 
+[[workflows.workflow.tasks]]
+task = "workflow.run"
+args = "Debug Model Page"
+
 [[workflows.workflow]]
 name = "Video Summarization App"
 author = "agent"
@@ -28,6 +32,15 @@ author = "agent"
 task = "shell.exec"
 args = "streamlit run app.py --server.port 5000"
 waitForPort = 5000
+
+[[workflows.workflow]]
+name = "Debug Model Page"
+author = "agent"
+
+[[workflows.workflow.tasks]]
+task = "shell.exec"
+args = "streamlit run debug_model_page.py --server.port 5001"
+waitForPort = 5001
 
 [[ports]]
 localPort = 5000
