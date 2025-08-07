@@ -237,54 +237,54 @@ def show_model_manager():
                             progress_bar.progress(10)
                             
                             try:
-                            # Check if HF_TOKEN is available
-                            hf_token = os.environ.get('HF_TOKEN', '')
+                                # Check if HF_TOKEN is available
+                                hf_token = os.environ.get('HF_TOKEN', '')
                             
-                            # Prepare download command with token if available
-                            base_command = model['command']
-                            if hf_token:
-                                # Add token to command
-                                base_command = base_command.replace('huggingface-cli download', f'huggingface-cli download --token {hf_token}')
-                                status_text.write("📥 Downloading with authenticated token...")
-                            else:
-                                status_text.write("📥 Downloading model files (public access)...")
-                            
-                            progress_bar.progress(30)
-                            
-                            # Use the encoding fix utility with HF token if available
-                            success, error_msg = fix_huggingface_cli_download(
-                                model['repo'], 
-                                "models/local_llm",
-                                timeout=1800,
-                                hf_token=hf_token if hf_token else None
-                            )
-                            
-                            progress_bar.progress(90)
-                            
-                            if success:
-                                progress_bar.progress(100)
-                                status_text.write("✅ Download complete!")
-                                st.balloons()
-                                st.success(f"🎉 {model['name']} installed successfully!")
+                                # Prepare download command with token if available
+                                base_command = model['command']
+                                if hf_token:
+                                    # Add token to command
+                                    base_command = base_command.replace('huggingface-cli download', f'huggingface-cli download --token {hf_token}')
+                                    status_text.write("📥 Downloading with authenticated token...")
+                                else:
+                                    status_text.write("📥 Downloading model files (public access)...")
                                 
-                                # Update session state to indicate model is ready
-                                st.session_state.llm_model_ready = True
-                                st.session_state.selected_llm_model = model['repo']
+                                progress_bar.progress(30)
                                 
-                                st.rerun()
-                            else:
-                                status_text.write("❌ Download failed")
-                                st.error(f"Failed to download {model['name']}. Error: {error_msg}")
+                                # Use the encoding fix utility with HF token if available
+                                success, error_msg = fix_huggingface_cli_download(
+                                    model['repo'], 
+                                    "models/local_llm",
+                                    timeout=1800,
+                                    hf_token=hf_token if hf_token else None
+                                )
                                 
-                        except subprocess.TimeoutExpired:
-                            status_text.write("❌ Download timeout")
-                            st.error(f"Download of {model['name']} timed out. Please try again.")
-                        except FileNotFoundError:
-                            status_text.write("❌ huggingface-cli not found")
-                            st.error("huggingface-cli not found. Please install it with: pip install huggingface_hub[cli]")
-                        except Exception as e:
-                            status_text.write("❌ Download error")
-                            st.error(f"Error downloading {model['name']}: {str(e)}")
+                                progress_bar.progress(90)
+                                
+                                if success:
+                                    progress_bar.progress(100)
+                                    status_text.write("✅ Download complete!")
+                                    st.balloons()
+                                    st.success(f"🎉 {model['name']} installed successfully!")
+                                    
+                                    # Update session state to indicate model is ready
+                                    st.session_state.llm_model_ready = True
+                                    st.session_state.selected_llm_model = model['repo']
+                                    
+                                    st.rerun()
+                                else:
+                                    status_text.write("❌ Download failed")
+                                    st.error(f"Failed to download {model['name']}. Error: {error_msg}")
+                                    
+                            except subprocess.TimeoutExpired:
+                                status_text.write("❌ Download timeout")
+                                st.error(f"Download of {model['name']} timed out. Please try again.")
+                            except FileNotFoundError:
+                                status_text.write("❌ huggingface-cli not found")
+                                st.error("huggingface-cli not found. Please install it with: pip install huggingface_hub[cli]")
+                            except Exception as e:
+                                status_text.write("❌ Download error")
+                                st.error(f"Error downloading {model['name']}: {str(e)}")
     
     st.divider()
     

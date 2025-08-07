@@ -1,0 +1,24 @@
+INFO:utils.progress_tracker:Progress tracker update thread started
+INFO:core.video_discovery:Extracted metadata for: Wedding Crashers.avi
+[matroska,webm @ 00000296b2567180] Unsupported encoding type0x00 at pos 8526029385 (0x1fc30e249) invalid as first byte of an EBML number
+[matroska,webm @ 00000296b2567180] Unsupported encoding typeUnsupported encoding typeUnsupported encoding typeUnsupported encoding typeUnsupported encoding typeUnsupported encoding typeUnsupported encoding typeUnsupported encoding typeUnsupported encoding typeUnsupported encoding typeHeader missing
+[mp3float @ 00000296dba3b6c0] Header missing
+[mp3float @ 00000296dba3b6c0] Header missing
+[mp3float @ 00000296dba3b6c0] Header missing
+[matroska,webm @ 00000296dc05c4c0] Unsupported encoding typeUnsupported encoding typeUnsupported encoding typeUnsupported encoding typeUnsupported encoding typeUnsupported encoding typeUnsupported encoding typeUnsupported encoding typeUnsupported encoding typeUnsupported encoding typeUnsupported encoding typeUnsupported encoding typeUnsupported encoding typeUnsupported encoding typeUnsupported encoding typeUnsupported encoding typeUnsupported encoding typeUnsupported encoding typeUnsupported encoding typeUnsupported encoding typeUnsupported encoding typeUnsupported encoding typeUnsupported encoding typeUnsupported encoding typeUnsupported encoding typeUnsupported encoding typeUnsupported encoding typeUnsupported encoding typeUnsupported encoding typeUnsupported encoding typeUnsupported encoding typemoov atom not found
+[matroska,webm @ 00000296dbe2e340] Unsupported encoding typeUnsupported encoding typeUnsupported encoding typeUnsupported encoding typeUnsupported encoding typeUnsupported encoding typeUnsupported encoding typeUnsupported encoding typeUnsupported encoding typeUnsupported encoding typeUnsupported encoding typeUnsupported encoding typeUnsupported encoding typeUnsupported encoding typeUnsupported encoding typeUnsupported encoding typeUnsupported encoding typeUnsupported encoding typeUnsupported encoding typeUnsupported encoding typeUnsupported encoding typeUnsupported encoding typeUnsupported encoding typeUnsupported encoding typeUnsupported encoding typeUnsupported encoding typeUnsupported encoding typeUnsupported encoding typeUnsupported encoding typeUnsupported encoding typeUnsupported encoding typeUnsupported encoding typeUnsupported encoding typeUnsupported encoding typeUnsupported encoding typeUnsupported encoding typeUnsupported encoding typeUnsupported encoding typeUnsupported encoding typeUnsupported encoding typeUnsupported encoding typeUnsupported encoding typeUnsupported encoding typeUnsupported encoding typeUnsupported encoding typeUnsupported encoding typeUnsupported encoding typeUnsupported encoding typeUnsupported encoding typeUnsupported encoding typeUnsupported encoding typeUnsupported encoding typeUnsupported encoding typeUnsupported encoding typeUnsupported encoding typeUnsupported encoding typeUnsupported encoding typeUnsupported encoding typeUnsupported encoding typeUnsupported encoding typeUnsupported encoding typeUnsupported encoding typeUnsupported encoding typeUnsupported encoding typeHeader missing
+[mp3float @ 00000296dbcc6dc0] Header missing
+[mp3float @ 00000296dbcc6dc0] Header missing
+[mp3float @ 00000296dbcc6dc0] Header missing
+[mp3float @ 00000296dbcc6dc0] Header missing
+[mp3float @ 00000296dbcc6dc0] Header missing
+[mp3float @ 00000296dbcc6dc0] Header missing
+[mp3float @ 00000296dbcc6dc0] Header missing
+[mp3float @ 00000296dbcc5b80] Header missing
+[matroska,webm @ 00000296dbe308c0] Unsupported encoding typeUnsupported encoding typeUnsupported encoding type0x00 at pos 8526029385 (0x1fc30e249) invalid as first byte of an EBML number
+[matroska,webm @ 00000296dbe308c0] Unsupported encoding typeUnsupported encoding typeUnsupported encoding typeUnsupported encoding typeUnsupported encoding typeUnsupported encoding typeUnsupported encoding typeUnsupported encoding typeUnsupported encoding typeUnsupported encoding typeHeader missing
+[mp3float @ 00000296b2552dc0] Header missing
+[mp3float @ 00000296b2552dc0] Header missing
+[mp3float @ 00000296b2552dc0] Header missing
+[matroska,webm @ 00000296dbe2e340] Unsupported encoding typeUnINFO:core.video_discovery:Extracted metadata for: dredd.mkv
+

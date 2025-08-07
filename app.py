@@ -231,27 +231,7 @@ def show_queue_page():
             st.info("Use the text input to specify the directory path")
     
     with col3:
-        if st.button("📊 Directory Stats", use_container_width=True):
-            if Path(scan_directory).exists():
-                with st.spinner("Analyzing directory..."):
-                    stats = st.session_state.discovery.get_directory_stats(scan_directory)
-                
-                st.subheader("Directory Statistics")
-                col1, col2, col3 = st.columns(3)
-                
-                with col1:
-                    st.metric("Total Videos", stats['total_videos'])
-                    st.metric("Total Size (GB)", f"{stats['total_size_gb']:.1f}")
-                
-                with col2:
-                    st.metric("Duration (Hours)", f"{stats['total_duration_hours']:.1f}")
-                    st.metric("With Subtitles", stats['with_subtitles'])
-                
-                with col3:
-                    # Format distribution
-                    st.write("**Formats:**")
-                    for fmt, count in stats['formats'].items():
-                        st.write(f"{fmt}: {count}")
+        st.info("Directory stats available in Video Discovery page")
     
     # Discovered videos table
     st.subheader("Discovered Videos")
