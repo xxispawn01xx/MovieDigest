@@ -90,33 +90,47 @@ class BatchProcessor:
         }
         
         try:
+            # PERFORMANCE OPTIMIZATION: Check database first to avoid re-scanning existing videos
+            existing_videos = self.db.get_existing_video_paths(str(root_directory))
+            if self.progress_callback:
+                self.progress_callback(f"Found {len(existing_videos)} videos already in database")
+            
             # Discover videos - convert generator to list to fix len() error
             video_files = list(self.discovery.scan_directory(root_directory, include_subdirs))
+            if self.progress_callback:
+                self.progress_callback(f"Scanned directory and found {len(video_files)} total videos")
             
             for metadata in video_files:
                 scan_results['discovered'] += 1
+                file_path = metadata['file_path']
                 
                 try:
-                    # Add to database
-                    video_id = self.db.add_video(metadata['file_path'], metadata)
+                    # FAST PATH: Check if video already exists in database
+                    existing_video = self.db.get_video_by_path(file_path)
                     
-                    # Check if already processed
-                    status = self.db.get_videos_by_status('completed')
-                    already_processed = any(
-                        v['file_path'] == metadata['file_path'] for v in status
-                    )
-                    
-                    if already_processed:
-                        scan_results['already_processed'] += 1
+                    if existing_video:
+                        # Video exists - check if it needs processing
+                        if existing_video['status'] == 'completed':
+                            scan_results['already_processed'] += 1
+                            continue
+                        elif existing_video['status'] in ['queued', 'processing']:
+                            # Already in queue/processing
+                            continue
+                        else:
+                            # Video exists but needs processing - use existing ID
+                            video_id = existing_video['id']
                     else:
-                        # Add to processing queue
-                        self.processing_queue.put({
-                            'video_id': video_id,
-                            'file_path': metadata['file_path'],
-                            'metadata': metadata
-                        })
-                        scan_results['new'] += 1
-                        scan_results['queued'] += 1
+                        # New video - add to database
+                        video_id = self.db.add_video(file_path, metadata)
+                    
+                    # Add to processing queue
+                    self.processing_queue.put({
+                        'video_id': video_id,
+                        'file_path': file_path,
+                        'metadata': metadata
+                    })
+                    scan_results['new'] += 1
+                    scan_results['queued'] += 1
                 
                 except Exception as e:
                     error_msg = f"Error processing {metadata.get('file_path', 'unknown')}: {e}"

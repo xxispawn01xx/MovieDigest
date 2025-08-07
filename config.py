@@ -58,6 +58,9 @@ MAX_BATCH_SIZE = 5
 PROCESSING_TIMEOUT_HOURS = 6
 
 # Development/Testing Configuration
+# Batch processing configuration
+WHISPER_BATCH_SIZE = 4
+LLM_BATCH_SIZE = 2
 DISABLE_AUTO_DOWNLOADS = os.getenv('DISABLE_AUTO_DOWNLOADS', 'false').lower() == 'true'
 DISABLE_DATABASE_INIT = os.getenv('DISABLE_DATABASE_INIT', 'false').lower() == 'true'
 OFFLINE_MODE = os.getenv('OFFLINE_MODE', 'false').lower() == 'true'

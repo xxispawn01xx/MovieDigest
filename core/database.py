@@ -7,7 +7,7 @@ import json
 import logging
 from datetime import datetime
 from pathlib import Path
-from typing import Dict, List, Optional, Tuple
+from typing import Dict, List, Optional, Set, Tuple
 import config
 
 logger = logging.getLogger(__name__)
@@ -171,6 +171,32 @@ class VideoDatabase:
                 """)
             
             return [dict(row) for row in cursor.fetchall()]
+    
+    def get_video_by_path(self, file_path: str) -> Optional[Dict]:
+        """Get video by file path if it exists in database."""
+        with sqlite3.connect(self.db_path) as conn:
+            conn.row_factory = sqlite3.Row
+            cursor = conn.cursor()
+            cursor.execute("""
+                SELECT v.*, ps.status, ps.progress_percent, ps.current_stage
+                FROM videos v
+                JOIN processing_status ps ON v.id = ps.video_id
+                WHERE v.file_path = ?
+            """, (file_path,))
+            
+            row = cursor.fetchone()
+            return dict(row) if row else None
+    
+    def get_existing_video_paths(self, directory_path: str) -> Set[str]:
+        """Get set of all video file paths already in database for a directory."""
+        with sqlite3.connect(self.db_path) as conn:
+            cursor = conn.cursor()
+            cursor.execute("""
+                SELECT file_path FROM videos 
+                WHERE file_path LIKE ?
+            """, (f"{directory_path}%",))
+            
+            return {row[0] for row in cursor.fetchall()}
     
     def update_processing_status(self, video_id: int, status: str, 
                                progress: Optional[float] = None, stage: Optional[str] = None,
