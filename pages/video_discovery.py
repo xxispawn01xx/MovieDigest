@@ -79,8 +79,27 @@ def show_video_discovery():
                         video_files = list(video_files_generator)
                         
                         if video_files:
-                            st.success(f"Found {len(video_files)} video files!")
-                            st.session_state.discovered_videos = video_files
+                            # Add videos to database and get IDs
+                            videos_with_ids = []
+                            for video_metadata in video_files:
+                                try:
+                                    # Add video to database or get existing
+                                    existing_video = st.session_state.db.get_video_by_path(video_metadata['file_path'])
+                                    if existing_video:
+                                        # Use existing video with database ID
+                                        video_metadata.update(existing_video)
+                                    else:
+                                        # Add new video to database
+                                        video_id = st.session_state.db.add_video(video_metadata['file_path'], video_metadata)
+                                        video_metadata['id'] = video_id
+                                        video_metadata['status'] = 'discovered'
+                                    
+                                    videos_with_ids.append(video_metadata)
+                                except Exception as e:
+                                    st.error(f"Error adding {video_metadata['file_path']} to database: {e}")
+                            
+                            st.success(f"Found {len(videos_with_ids)} video files!")
+                            st.session_state.discovered_videos = videos_with_ids
                             st.session_state.scan_completed = True
                         else:
                             st.warning("No supported video files found in the specified directory.")
@@ -120,28 +139,106 @@ def show_video_discovery():
         
         df = pd.DataFrame(video_data)
         
-        # Display with selection
-        st.dataframe(
-            df[['Filename', 'Size', 'Duration', 'Status']], 
-            use_container_width=True,
-            hide_index=True
-        )
+        # Initialize selection state
+        if 'selected_videos' not in st.session_state:
+            st.session_state.selected_videos = set()
+        
+        # Select All / None controls
+        col1, col2, col3 = st.columns([2, 2, 6])
+        with col1:
+            if st.button("✅ Select All", use_container_width=True):
+                st.session_state.selected_videos = {v['file_path'] for v in videos}
+                st.rerun()
+        with col2:
+            if st.button("❌ Clear All", use_container_width=True):
+                st.session_state.selected_videos.clear()
+                st.rerun()
+        with col3:
+            selected_count = len(st.session_state.selected_videos)
+            st.write(f"**{selected_count} videos selected**")
+        
+        st.divider()
+        
+        # Individual video selection with cleaner layout
+        st.write("**Select videos to process:**")
+        
+        for i, video in enumerate(videos):
+            # Create a container for each video
+            with st.container():
+                col1, col2, col3, col4, col5 = st.columns([1, 4, 1.5, 1.5, 1.5])
+                
+                with col1:
+                    # Checkbox for selection
+                    is_selected = video['file_path'] in st.session_state.selected_videos
+                    if st.checkbox("", value=is_selected, key=f"select_{i}", label_visibility="collapsed"):
+                        st.session_state.selected_videos.add(video['file_path'])
+                    else:
+                        st.session_state.selected_videos.discard(video['file_path'])
+                
+                with col2:
+                    st.write(f"**{Path(video['file_path']).name}**")
+                
+                with col3:
+                    file_size_mb = video.get('file_size', 0) / (1024 * 1024)
+                    st.write(f"{file_size_mb:.1f} MB")
+                
+                with col4:
+                    duration_seconds = video.get('duration_seconds', 0)
+                    if duration_seconds:
+                        duration_str = f"{int(duration_seconds//60)}:{int(duration_seconds%60):02d}"
+                    else:
+                        duration_str = "Unknown"
+                    st.write(duration_str)
+                
+                with col5:
+                    status = video.get('status', 'discovered')
+                    status_color = {
+                        'discovered': '🔵',
+                        'queued': '🟡', 
+                        'processing': '🟠',
+                        'completed': '🟢',
+                        'error': '🔴'
+                    }.get(status, '⚪')
+                    st.write(f"{status_color} {status.title()}")
         
         # Action buttons
         st.divider()
-        col1, col2, col3 = st.columns(3)
+        col1, col2, col3, col4 = st.columns(4)
         
         with col1:
-            if st.button("➕ Add All to Queue", use_container_width=True):
-                from core.batch_processor import BatchProcessor
-                batch_processor = BatchProcessor()
+            selected_count = len(st.session_state.selected_videos)
+            if st.button(f"➕ Add Selected ({selected_count})", use_container_width=True, disabled=selected_count == 0):
+                added_count = 0
+                for video_path in st.session_state.selected_videos:
+                    try:
+                        # Find the matching video to get proper ID
+                        matching_video = next((v for v in videos if v['file_path'] == video_path), None)
+                        if matching_video:
+                            video_id = matching_video.get('id')
+                            if video_id:
+                                st.session_state.db.update_processing_status(video_id, 'queued')
+                                added_count += 1
+                            else:
+                                st.error(f"No video ID found for {Path(video_path).name}")
+                    except Exception as e:
+                        st.error(f"Failed to add {Path(video_path).name}: {str(e)}")
                 
+                if added_count > 0:
+                    st.success(f"Added {added_count} selected videos to processing queue!")
+                    st.session_state.selected_videos.clear()  # Clear selection after adding
+                    st.rerun()
+        
+        with col2:
+            if st.button("➕ Add All to Queue", use_container_width=True):
                 added_count = 0
                 for video in videos:
                     try:
-                        success = st.session_state.db.update_video_status(video['file_path'], 'queued')
-                        if success:
+                        video_id = video.get('id')
+                        if video_id:
+                            st.session_state.db.update_processing_status(video_id, 'queued')
                             added_count += 1
+                        else:
+                            st.error(f"No video ID found for {Path(video['file_path']).name}")
                     except Exception as e:
                         st.error(f"Failed to add {Path(video['file_path']).name}: {str(e)}")
                 
@@ -149,16 +246,18 @@ def show_video_discovery():
                     st.success(f"Added {added_count} videos to processing queue!")
                     st.rerun()
         
-        with col2:
+        with col3:
             if st.button("🔄 Refresh Status", use_container_width=True):
                 st.rerun()
         
-        with col3:
+        with col4:
             if st.button("🗑️ Clear Results", use_container_width=True):
                 if 'discovered_videos' in st.session_state:
                     del st.session_state.discovered_videos
                 if 'scan_completed' in st.session_state:
                     del st.session_state.scan_completed
+                if 'selected_videos' in st.session_state:
+                    del st.session_state.selected_videos
                 st.rerun()
     
     # Instructions
