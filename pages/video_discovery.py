@@ -101,6 +101,7 @@ def show_video_discovery():
                             st.success(f"Found {len(videos_with_ids)} video files!")
                             st.session_state.discovered_videos = videos_with_ids
                             st.session_state.scan_completed = True
+                            st.session_state.videos_loaded = True  # Mark as loaded so it persists
                         else:
                             st.warning("No supported video files found in the specified directory.")
                             
@@ -115,12 +116,27 @@ def show_video_discovery():
             # This would ideally open a file browser, but we'll provide common paths
             st.info("Common video directories:\n- /Movies\n- /Users/[username]/Movies\n- D:\\Movies")
     
-    # Display discovered videos if available
-    if st.session_state.get('scan_completed', False) and st.session_state.get('discovered_videos'):
+    # Auto-load videos from database on page load
+    if not st.session_state.get('videos_loaded', False) and hasattr(st.session_state, 'db'):
+        try:
+            # Get all videos from database (get_videos_by_status() with no status returns all)
+            all_videos = st.session_state.db.get_videos_by_status()
+            if all_videos:
+                st.session_state.discovered_videos = all_videos
+                st.session_state.scan_completed = True
+                st.session_state.videos_loaded = True
+                # Show database load info only if there are videos
+                if len(all_videos) > 0:
+                    st.info(f"📚 Auto-loaded {len(all_videos)} videos from database")
+        except Exception as e:
+            st.error(f"Error loading videos from database: {e}")
+    
+    # Display discovered videos if available (from scan or database)
+    if (st.session_state.get('scan_completed', False) and st.session_state.get('discovered_videos')) or st.session_state.get('videos_loaded', False):
         st.divider()
         st.subheader("🎬 Discovered Videos")
         
-        videos = st.session_state.discovered_videos
+        videos = st.session_state.get('discovered_videos', [])
         
         # Create DataFrame for display
         video_data = []
@@ -248,16 +264,16 @@ def show_video_discovery():
         
         with col3:
             if st.button("🔄 Refresh Status", use_container_width=True):
+                # Clear auto-load flag to force refresh from database
+                st.session_state.videos_loaded = False
                 st.rerun()
         
         with col4:
             if st.button("🗑️ Clear Results", use_container_width=True):
-                if 'discovered_videos' in st.session_state:
-                    del st.session_state.discovered_videos
-                if 'scan_completed' in st.session_state:
-                    del st.session_state.scan_completed
-                if 'selected_videos' in st.session_state:
-                    del st.session_state.selected_videos
+                # Clear all session data related to video discovery
+                for key in ['discovered_videos', 'scan_completed', 'selected_videos', 'videos_loaded']:
+                    if key in st.session_state:
+                        del st.session_state[key]
                 st.rerun()
     
     # Instructions

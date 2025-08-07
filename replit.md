@@ -48,6 +48,8 @@ Preferred LLM models: Mistral (uncensored) over traditional models like DialoGPT
 - **Model Management**: Built intelligent Model Downloader with Whisper model recommendations and automated downloads
 - **Plex Integration**: Built complete Plex Media Server integration for genre filtering, rating-based sorting, and rich metadata discovery
 - **Processing Queue Fix**: Resolved issue where "Add to Queue" button didn't start processing by connecting database status with internal queue
+- **Auto-Loading Video Discovery**: Videos now auto-populate from database on page load instead of requiring manual "Scan Directory" clicks for previously discovered videos
+- **Individual Video Selection**: Complete rebuild of video selection interface with individual checkboxes, "Select All/Clear All" controls, selection counter, and smart "Add Selected (X)" button functionality
 
 # System Architecture
 
