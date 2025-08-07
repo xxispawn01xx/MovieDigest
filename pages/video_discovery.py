@@ -116,27 +116,39 @@ def show_video_discovery():
             # This would ideally open a file browser, but we'll provide common paths
             st.info("Common video directories:\n- /Movies\n- /Users/[username]/Movies\n- D:\\Movies")
     
+    # Debug: Show current session state
+    if st.checkbox("🔍 Debug Mode", help="Show debug information"):
+        st.write("**Session State Debug:**")
+        st.write(f"- videos_loaded: {st.session_state.get('videos_loaded', False)}")
+        st.write(f"- scan_completed: {st.session_state.get('scan_completed', False)}")
+        st.write(f"- discovered_videos count: {len(st.session_state.get('discovered_videos', []))}")
+        st.write(f"- has db: {hasattr(st.session_state, 'db')}")
+    
     # Auto-load videos from database on page load
     if not st.session_state.get('videos_loaded', False) and hasattr(st.session_state, 'db'):
         try:
             # Get all videos from database (get_videos_by_status() with no status returns all)
             all_videos = st.session_state.db.get_videos_by_status()
+            st.write(f"**Database query returned {len(all_videos)} videos**")  # Debug output
+            
             if all_videos:
                 st.session_state.discovered_videos = all_videos
                 st.session_state.scan_completed = True
                 st.session_state.videos_loaded = True
-                # Show database load info only if there are videos
-                if len(all_videos) > 0:
-                    st.info(f"📚 Auto-loaded {len(all_videos)} videos from database")
+                st.success(f"📚 Auto-loaded {len(all_videos)} videos from database")
+            else:
+                st.info("No videos found in database. Scan a directory to discover videos.")
         except Exception as e:
             st.error(f"Error loading videos from database: {e}")
     
     # Display discovered videos if available (from scan or database)
-    if (st.session_state.get('scan_completed', False) and st.session_state.get('discovered_videos')) or st.session_state.get('videos_loaded', False):
+    videos = st.session_state.get('discovered_videos', [])
+    st.write(f"**Videos to display: {len(videos)}**")  # Debug output
+    
+    if videos and len(videos) > 0:
         st.divider()
-        st.subheader("🎬 Discovered Videos")
-        
-        videos = st.session_state.get('discovered_videos', [])
+        st.subheader("🎬 Video Selection Interface")
+        st.write(f"Select from {len(videos)} available videos:")
         
         # Create DataFrame for display
         video_data = []
