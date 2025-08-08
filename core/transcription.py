@@ -49,7 +49,7 @@ class OfflineTranscriber:
     
     def load_model(self, model_size: str = None) -> bool:
         """
-        Load Whisper model with GPU acceleration.
+        Load Whisper model with GPU acceleration and memory management.
         
         Args:
             model_size: Model size ('tiny', 'base', 'small', 'medium', 'large')
@@ -58,8 +58,28 @@ class OfflineTranscriber:
             True if model loaded successfully
         """
         try:
+            # CRITICAL FIX: Unload existing model first to prevent memory leaks
+            if self.model is not None:
+                logger.info("Unloading existing Whisper model to free memory")
+                del self.model
+                self.model = None
+                torch.cuda.empty_cache()
+                
             if model_size:
                 self.model_size = model_size
+            
+            # MEMORY MANAGEMENT: Check available memory before loading
+            from utils.gpu_manager import GPUManager
+            gpu_manager = GPUManager()
+            
+            if torch.cuda.is_available():
+                memory_status = gpu_manager.check_memory_pressure()
+                logger.info(f"Memory status before model load: {memory_status['usage_percent']:.1f}% used")
+                
+                # Perform cleanup if memory pressure is high
+                if memory_status['pressure_level'] in ['high', 'critical']:
+                    logger.warning(f"High memory pressure detected ({memory_status['pressure_level']}), performing cleanup")
+                    gpu_manager.optimize_memory_usage(aggressive=True)
             
             logger.info(f"Loading Whisper model: {self.model_size}")
             
@@ -73,9 +93,30 @@ class OfflineTranscriber:
             logger.info(f"Model loaded successfully on {self.device}")
             return True
             
+        except torch.cuda.OutOfMemoryError as e:
+            logger.error(f"CUDA out of memory while loading model: {e}")
+            # Emergency cleanup and retry with CPU
+            if torch.cuda.is_available():
+                gpu_manager = GPUManager()
+                gpu_manager.emergency_memory_cleanup()
+                # Switch to CPU fallback
+                self.device = torch.device("cpu")
+                logger.warning("Switching to CPU due to GPU memory constraints")
+                return self.load_model(model_size)
+            return False
         except Exception as e:
             logger.error(f"Failed to load Whisper model: {e}")
             return False
+    
+    def cleanup_model(self):
+        """Clean up GPU memory by unloading the model."""
+        if self.model is not None:
+            logger.info("Cleaning up Whisper model to free GPU memory")
+            del self.model
+            self.model = None
+            if torch.cuda.is_available():
+                torch.cuda.empty_cache()
+                torch.cuda.synchronize()
     
     @quiet_transcription
     def transcribe_video(self, video_path: str, language: str = None) -> List[Dict]:

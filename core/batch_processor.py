@@ -110,11 +110,13 @@ class BatchProcessor:
                     
                     if existing_video:
                         # Video exists - check if it needs processing
-                        if existing_video['status'] == 'completed':
+                        status = existing_video.get('status', 'discovered')
+                        if status == 'completed':
                             scan_results['already_processed'] += 1
                             continue
-                        elif existing_video['status'] in ['queued', 'processing']:
-                            # Already in queue/processing
+                        elif status in ['queued', 'processing']:
+                            # CRITICAL FIX: Already in queue/processing - skip to prevent duplicates
+                            logger.debug(f"Skipping {file_path} - already {status}")
                             continue
                         else:
                             # Video exists but needs processing - use existing ID
@@ -122,6 +124,7 @@ class BatchProcessor:
                     else:
                         # New video - add to database
                         video_id = self.db.add_video(file_path, metadata)
+                        scan_results['new'] += 1
                     
                     # Add to processing queue
                     self.processing_queue.put({
@@ -283,7 +286,12 @@ class BatchProcessor:
                 self.processing_queue.put(video_item)
                 break
             
-            # Check memory pressure before processing each video
+            # CRITICAL FIX: Proactive OOM detection and prevention
+            oom_prevention = self.gpu_manager.detect_and_prevent_oom()
+            if oom_prevention['actions_taken']:
+                logger.info(f"OOM prevention actions taken: {oom_prevention['actions_taken']}")
+            
+            # Additional memory pressure monitoring
             memory_status = self.gpu_manager.check_memory_pressure()
             if memory_status['action'] == 'emergency_cleanup':
                 logger.warning(f"Critical memory pressure ({memory_status['usage_percent']:.1f}%) - performing emergency cleanup")
@@ -300,9 +308,13 @@ class BatchProcessor:
                 self._process_single_video_with_memory_management(video_item)
                 self.processing_stats['successful'] += 1
                 
-                # Cleanup after each video to prevent memory accumulation
-                if idx % 2 == 0:  # Every 2 videos
-                    self.gpu_manager.optimize_memory_usage()
+                # ENHANCED: Cleanup after each video to prevent memory accumulation
+                self.gpu_manager.optimize_memory_usage()
+                
+                # Additional cleanup every 2 videos for sustained processing
+                if idx % 2 == 0:
+                    logger.info("Performing sustained processing memory optimization")
+                    self.gpu_manager.detect_and_prevent_oom()
                 
             except torch.cuda.OutOfMemoryError as oom:
                 error_msg = f"CUDA out of memory for {video_item['file_path']}: {oom}"
@@ -398,6 +410,9 @@ class BatchProcessor:
             transcription_data = self.transcriber.transcribe_video(file_path)
             self.db.add_transcription_data(video_id, transcription_data)
             
+            # CRITICAL FIX: Clean up transcription model to free GPU memory
+            self.transcriber.cleanup_model()
+            
             # Stage 3: Scene Importance Calculation
             self._update_status(video_id, 'scene_analysis', 50.0)
             scenes = self.scene_detector.calculate_scene_importance(
@@ -443,8 +458,8 @@ class BatchProcessor:
             # Save summary data
             self.db.add_summary_data(video_id, summary_result)
             
-            # Stage 7: Complete
-            self._update_status(video_id, 'completed', 100.0)
+            # Stage 7: Complete - CRITICAL: Mark as completed to prevent reprocessing
+            self.db.update_processing_status(video_id, 'completed', 100.0, 'finished')
             
             logger.info(f"Successfully processed: {Path(file_path).name}")
             

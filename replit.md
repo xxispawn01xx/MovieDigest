@@ -13,6 +13,9 @@ Preferred LLM models: Mistral (uncensored) over traditional models like DialoGPT
 - **Critical Audio Extraction Fix**: Fixed "Failed to set value '0:a:1' for option 'map': Invalid argument" error by correcting FFmpeg stream mapping from `0:a:{index}` to `0:{index}` in transcription.py, summarizer.py, and media_selector.py
 - **VLC Playback Compatibility**: Completely rewrote multi-scene video concatenation to use individual clip creation + concat demuxer instead of filter_complex, ensuring perfect VLC seeking and playback without errors
 - **Enhanced Video Output**: Added proper audio track mapping for single and multi-scene summaries with `-movflags '+faststart'` for optimal VLC compatibility and seeking performance
+- **Comprehensive GPU Memory Management**: Implemented proactive CUDA out-of-memory detection and prevention system with intelligent memory pressure monitoring, automatic model cleanup between videos, and multi-tier emergency recovery for sustained RTX 3060 processing
+- **Duplicate Processing Prevention**: Fixed critical batch processing bug where videos were processed multiple times by enhancing status tracking logic and ensuring proper completion marking to prevent queue duplication
+- **Intelligent Model Lifecycle Management**: Added automatic Whisper model unloading and GPU memory cleanup after each transcription to prevent memory leaks and fragmentation issues that caused processing failures
 
 ## Previous Updates (Aug 6, 2025)
 - **Hugging Face Token Integration**: Added secure HF_TOKEN configuration in Model Management page with one-click authenticated model downloads, token management interface with save/clear functionality, and automatic token integration with download commands for seamless access to gated models
