@@ -66,7 +66,7 @@ if 'initialized' not in st.session_state:
     st.session_state.vlc_bookmarks = VLCBookmarkGenerator()
     st.session_state.plex_integration = PlexIntegration()
     st.session_state.processing_status = {}
-    st.session_state.selected_videos = []
+    st.session_state.selected_videos = set()
     st.session_state.custom_output_dir = None
     st.session_state.initialized = True
 
@@ -269,10 +269,10 @@ def show_queue_page():
             use_container_width=True
         )
         
-        # Update selected videos
-        st.session_state.selected_videos = [
+        # Update selected videos (as a set for consistency with video_discovery.py)
+        st.session_state.selected_videos = set(
             row['Video ID'] for _, row in edited_df.iterrows() if row['Select'] == True
-        ]
+        )
         
         # Selection actions
         if st.session_state.selected_videos:
@@ -295,7 +295,8 @@ def show_queue_page():
             
             with col3:
                 if st.button("ℹ️ View Details", use_container_width=True):
-                    selected_video_id = st.session_state.selected_videos[0]
+                    # Get first video from set (sets are not indexable)
+                    selected_video_id = next(iter(st.session_state.selected_videos))
                     video_details = st.session_state.db.get_video_details(selected_video_id)
                     
                     if video_details:
