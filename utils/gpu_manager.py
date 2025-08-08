@@ -350,6 +350,60 @@ class GPUManager:
         except Exception as e:
             logger.error(f"Emergency cleanup failed: {e}")
     
+    def detect_and_prevent_oom(self) -> Dict[str, any]:
+        """
+        Proactively detect potential CUDA OOM conditions and prevent them.
+        
+        Returns:
+            Dict with memory status and prevention actions taken
+        """
+        if not self.cuda_available:
+            return {'status': 'no_gpu', 'actions_taken': []}
+        
+        try:
+            # Get detailed memory information
+            total_memory = torch.cuda.get_device_properties(0).total_memory / (1024**3)
+            allocated = torch.cuda.memory_allocated() / (1024**3)
+            reserved = torch.cuda.memory_reserved() / (1024**3)
+            free_memory = total_memory - allocated
+            
+            # Check for memory fragmentation
+            fragmentation_ratio = reserved / total_memory if total_memory > 0 else 0
+            
+            prevention_actions = []
+            
+            # Critical memory pressure (>90% allocated)
+            if allocated / total_memory > 0.90:
+                prevention_actions.append("emergency_cleanup")
+                self.emergency_memory_cleanup()
+                logger.warning(f"Emergency OOM prevention: {allocated:.1f}GB/{total_memory:.1f}GB allocated")
+            
+            # High memory pressure (>80% allocated)
+            elif allocated / total_memory > 0.80:
+                prevention_actions.append("aggressive_cleanup")
+                self.optimize_memory_usage(aggressive=True)
+                logger.info(f"Aggressive OOM prevention: {allocated:.1f}GB/{total_memory:.1f}GB allocated")
+            
+            # High fragmentation (>50% reserved but unallocated)
+            elif fragmentation_ratio > 0.50:
+                prevention_actions.append("defragmentation")
+                torch.cuda.empty_cache()
+                logger.info(f"Memory defragmentation: {reserved:.1f}GB reserved but unallocated")
+            
+            return {
+                'status': 'monitored',
+                'total_gb': total_memory,
+                'allocated_gb': allocated,
+                'reserved_gb': reserved,
+                'free_gb': free_memory,
+                'fragmentation_ratio': fragmentation_ratio,
+                'actions_taken': prevention_actions
+            }
+            
+        except Exception as e:
+            logger.error(f"OOM detection failed: {e}")
+            return {'status': 'error', 'error': str(e), 'actions_taken': []}
+    
     def get_memory_stats(self) -> Dict:
         """Get detailed memory statistics."""
         if not self.cuda_available:
