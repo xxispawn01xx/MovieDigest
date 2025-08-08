@@ -167,19 +167,26 @@ def show_video_discovery():
         
         df = pd.DataFrame(video_data)
         
-        # Initialize selection state
-        if 'selected_videos' not in st.session_state:
+        # Initialize selection state (ensure it's always a set)
+        if 'selected_videos' not in st.session_state or not isinstance(st.session_state.selected_videos, set):
             st.session_state.selected_videos = set()
         
         # Select All / None controls
         col1, col2, col3 = st.columns([2, 2, 6])
         with col1:
             if st.button("✅ Select All", use_container_width=True):
-                st.session_state.selected_videos = {v['file_path'] for v in videos}
+                # Ensure it's a set and add all video paths
+                if not isinstance(st.session_state.selected_videos, set):
+                    st.session_state.selected_videos = set()
+                st.session_state.selected_videos.update(v['file_path'] for v in videos)
                 st.rerun()
         with col2:
             if st.button("❌ Clear All", use_container_width=True):
-                st.session_state.selected_videos.clear()
+                # Ensure it's a set before clearing
+                if not isinstance(st.session_state.selected_videos, set):
+                    st.session_state.selected_videos = set()
+                else:
+                    st.session_state.selected_videos.clear()
                 st.rerun()
         with col3:
             selected_count = len(st.session_state.selected_videos)
@@ -197,11 +204,18 @@ def show_video_discovery():
                 
                 with col1:
                     # Checkbox for selection
-                    is_selected = video['file_path'] in st.session_state.selected_videos
-                    if st.checkbox("", value=is_selected, key=f"select_{i}", label_visibility="collapsed"):
-                        st.session_state.selected_videos.add(video['file_path'])
-                    else:
-                        st.session_state.selected_videos.discard(video['file_path'])
+                    video_path = video['file_path']
+                    is_selected = video_path in st.session_state.selected_videos
+                    
+                    # Use a callback to handle checkbox changes properly
+                    checkbox_key = f"select_{i}"
+                    checkbox_value = st.checkbox("", value=is_selected, key=checkbox_key, label_visibility="collapsed")
+                    
+                    # Update selection based on checkbox state
+                    if checkbox_value and video_path not in st.session_state.selected_videos:
+                        st.session_state.selected_videos.add(video_path)
+                    elif not checkbox_value and video_path in st.session_state.selected_videos:
+                        st.session_state.selected_videos.remove(video_path)
                 
                 with col2:
                     st.write(f"**{Path(video['file_path']).name}**")
@@ -283,9 +297,11 @@ def show_video_discovery():
         with col4:
             if st.button("🗑️ Clear Results", use_container_width=True):
                 # Clear all session data related to video discovery
-                for key in ['discovered_videos', 'scan_completed', 'selected_videos', 'videos_loaded']:
+                for key in ['discovered_videos', 'scan_completed', 'videos_loaded']:
                     if key in st.session_state:
                         del st.session_state[key]
+                # Ensure selected_videos is reset as an empty set
+                st.session_state.selected_videos = set()
                 st.rerun()
     
     # Instructions
