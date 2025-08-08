@@ -291,9 +291,11 @@ class MediaTrackSelector:
         args = []
         
         if selected_audio_index is not None:
-            args.extend(['-map', f'0:a:{selected_audio_index}'])
+            # selected_audio_index should be the stream index, not audio-only index
+            args.extend(['-map', f'0:{selected_audio_index}'])
         else:
-            args.extend(['-map', '0:a:0'])  # Default to first audio track
+            # For compatibility, map the first audio stream we find
+            args.extend(['-map', '0:a'])  # Map any audio track
         
         return args
     

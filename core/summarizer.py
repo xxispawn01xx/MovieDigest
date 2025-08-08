@@ -370,7 +370,7 @@ class VideoSummarizer:
             # Single scene - direct encoding with audio track selection
             cmd.extend([
                 '-map', '0:v',  # Map video
-                '-map', f'0:a:{recommended_audio}',  # Map specific audio track
+                '-map', f'0:{recommended_audio}',  # Fixed: Map specific audio stream (not audio-only index)
                 '-c:v', 'libx264',
                 '-c:a', 'aac',
                 '-movflags', '+faststart',  # Enable seeking
@@ -379,33 +379,96 @@ class VideoSummarizer:
                 str(summary_path)
             ])
         else:
-            # Multiple scenes - use direct filter_complex for better seeking
-            logger.info(f"Concatenating {len(selected_scenes)} scenes using filter_complex")
+            # Multiple scenes - create individual clips first, then concatenate using concat demuxer
+            logger.info(f"Creating {len(selected_scenes)} individual clips for concatenation")
             
-            # Build filter_complex for concatenation with audio track selection
-            # Select specific audio track for all inputs
-            audio_map_parts = []
-            video_map_parts = []
-            for i in range(len(selected_scenes)):
-                video_map_parts.append(f'[{i}:v]')
-                audio_map_parts.append(f'[{i}:a:{recommended_audio}]')  # Select specific audio track
+            # Create temporary directory for clips
+            temp_dir = config.TEMP_DIR / "clips"
+            temp_dir.mkdir(exist_ok=True)
             
-            filter_str = ''.join([f'{video_map_parts[i]}{audio_map_parts[i]}' for i in range(len(selected_scenes))])
-            filter_str += f'concat=n={len(selected_scenes)}:v=1:a=1[outv][outa]'
+            clip_files = []
+            concat_list_path = temp_dir / f"{video_path.stem}_concat_list.txt"
             
-            cmd.extend([
-                '-filter_complex', filter_str,
-                '-map', '[outv]',
-                '-map', '[outa]',
-                '-c:v', 'libx264',
-                '-c:a', 'aac',
-                '-preset', 'fast',  # Faster encoding
-                '-crf', '23',  # Good quality balance
-                '-movflags', '+faststart',  # Enable seeking
-                '-avoid_negative_ts', 'make_zero',  # Fix timestamp issues
-                '-y',
-                str(summary_path)
-            ])
+            try:
+                # Create individual clips with proper audio track selection
+                for i, scene in enumerate(selected_scenes):
+                    clip_path = temp_dir / f"{video_path.stem}_clip_{i:03d}.mp4"
+                    clip_files.append(clip_path)
+                    
+                    clip_cmd = [
+                        'ffmpeg',
+                        '-ss', str(scene['start_time']),
+                        '-t', str(scene['duration']),
+                        '-i', str(video_path),
+                        '-map', '0:v',  # Map video
+                        '-map', f'0:{recommended_audio}',  # Map correct audio stream
+                        '-c:v', 'libx264',
+                        '-c:a', 'aac',
+                        '-preset', 'fast',
+                        '-crf', '23',
+                        '-avoid_negative_ts', 'make_zero',
+                        '-y',
+                        str(clip_path)
+                    ]
+                    
+                    logger.info(f"Creating clip {i+1}/{len(selected_scenes)}")
+                    result = subprocess.run(
+                        clip_cmd,
+                        capture_output=True,
+                        text=True,
+                        encoding='utf-8',
+                        errors='replace',
+                        timeout=1800
+                    )
+                    
+                    if result.returncode != 0:
+                        logger.error(f"Failed to create clip {i}: {result.stderr}")
+                        raise RuntimeError(f"Clip creation failed: {result.stderr}")
+                
+                # Create concat list file
+                with open(concat_list_path, 'w', encoding='utf-8') as f:
+                    for clip_file in clip_files:
+                        f.write(f"file '{clip_file.absolute()}'\n")
+                
+                # Concatenate clips using concat demuxer for perfect seeking
+                concat_cmd = [
+                    'ffmpeg',
+                    '-f', 'concat',
+                    '-safe', '0',
+                    '-i', str(concat_list_path),
+                    '-c', 'copy',  # Copy streams without re-encoding
+                    '-movflags', '+faststart',  # Enable seeking
+                    '-y',
+                    str(summary_path)
+                ]
+                
+                logger.info("Concatenating clips into final summary")
+                result = subprocess.run(
+                    concat_cmd,
+                    capture_output=True,
+                    text=True,
+                    encoding='utf-8',
+                    errors='replace',
+                    timeout=1800
+                )
+                
+                if result.returncode != 0:
+                    logger.error(f"Concatenation failed: {result.stderr}")
+                    raise RuntimeError(f"Video concatenation failed: {result.stderr}")
+                
+            finally:
+                # Clean up temporary clip files
+                try:
+                    for clip_file in clip_files:
+                        if clip_file.exists():
+                            clip_file.unlink()
+                    if concat_list_path.exists():
+                        concat_list_path.unlink()
+                except Exception as e:
+                    logger.warning(f"Failed to clean up temporary clips: {e}")
+            
+            # Skip the subprocess call below since we handled it above
+            return summary_path
         
         try:
             logger.info(f"Running FFmpeg command: {' '.join(cmd[:10])}... (truncated)")

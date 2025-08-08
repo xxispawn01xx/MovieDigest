@@ -169,10 +169,12 @@ class OfflineTranscriber:
             last_error = ""
             
             # Method 1: Specific audio track extraction
+            # Fix: recommended_audio is the stream index (e.g. 1), not the audio-only index
+            # Use -map 0:{stream_index} instead of 0:a:{audio_index}
             cmd_specific = [
                 'ffmpeg',
                 '-i', str(video_path),
-                '-map', f'0:a:{recommended_audio}',
+                '-map', f'0:{recommended_audio}',  # Fixed: use stream index directly
                 '-acodec', 'pcm_s16le',
                 '-ac', '1',
                 '-ar', '16000',
