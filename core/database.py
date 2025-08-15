@@ -233,6 +233,38 @@ class VideoDatabase:
                 WHERE video_id = ?
             """, params)
     
+    def remove_video_completely(self, video_id: int) -> bool:
+        """Completely remove a video and all associated data from the database."""
+        try:
+            with sqlite3.connect(self.db_path) as conn:
+                cursor = conn.cursor()
+                
+                # Get video info for logging
+                cursor.execute("SELECT file_path FROM videos WHERE id = ?", (video_id,))
+                video_info = cursor.fetchone()
+                
+                if not video_info:
+                    logger.warning(f"Video {video_id} not found for removal")
+                    return False
+                
+                file_path = video_info[0]
+                
+                # Delete all associated data
+                cursor.execute("DELETE FROM validation_metrics WHERE video_id = ?", (video_id,))
+                cursor.execute("DELETE FROM narrative_analysis WHERE video_id = ?", (video_id,))
+                cursor.execute("DELETE FROM transcriptions WHERE video_id = ?", (video_id,))
+                cursor.execute("DELETE FROM scene_data WHERE video_id = ?", (video_id,))
+                cursor.execute("DELETE FROM processing_status WHERE video_id = ?", (video_id,))
+                cursor.execute("DELETE FROM videos WHERE id = ?", (video_id,))
+                
+                conn.commit()
+                logger.info(f"Completely removed video {video_id}: {file_path}")
+                return True
+                
+        except Exception as e:
+            logger.error(f"Failed to remove video {video_id}: {e}")
+            return False
+    
     def reset_video_for_reprocessing(self, video_id: int) -> bool:
         """Reset a video's processing status to allow reprocessing with new features."""
         try:

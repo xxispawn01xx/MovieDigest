@@ -107,7 +107,8 @@ def main():
     elif page == "Advanced Analysis":
         show_advanced_analysis_page()
     elif page == "Processing Queue":
-        show_queue_page()
+        from pages.queue_management import show_queue_management
+        show_queue_management()
     elif page == "Batch Processing":
         show_batch_processing_page()
     elif page == "Summary Results":
@@ -185,6 +186,24 @@ def show_overview_page():
             for video in recent_videos
         ])
         st.dataframe(activity_df, use_container_width=True)
+        
+        # Enhanced progress display for processing videos
+        processing_videos = [v for v in recent_videos if v['status'] == 'processing']
+        if processing_videos:
+            st.subheader("🔄 Currently Processing")
+            for video in processing_videos:
+                filename = Path(video['file_path']).name
+                progress = video['progress_percent']
+                stage = video.get('current_stage', 'Unknown')
+                
+                st.write(f"**{filename}**")
+                col1, col2 = st.columns([3, 1])
+                with col1:
+                    st.progress(progress / 100.0)
+                with col2:
+                    st.write(f"{progress:.1f}%")
+                st.caption(f"Current stage: {stage}")
+                st.divider()
     else:
         st.info("No videos found. Use the Video Discovery page to scan for videos.")
     
@@ -290,8 +309,19 @@ def show_queue_page():
             
             with col2:
                 if st.button("🗑️ Remove Selected", use_container_width=True):
-                    # Would implement removal logic here
-                    st.warning("Remove functionality not implemented yet")
+                    # Implement video removal logic
+                    removed_count = 0
+                    for video_id in st.session_state.selected_videos:
+                        if st.session_state.db.remove_video_completely(video_id):
+                            removed_count += 1
+                    
+                    if removed_count > 0:
+                        st.success(f"Successfully removed {removed_count} videos from database")
+                        # Clear selection
+                        st.session_state.selected_videos = set()
+                        st.rerun()
+                    else:
+                        st.error("Failed to remove selected videos")
             
             with col3:
                 if st.button("ℹ️ View Details", use_container_width=True):
