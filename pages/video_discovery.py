@@ -209,7 +209,7 @@ def show_video_discovery():
                     
                     # Use a callback to handle checkbox changes properly
                     checkbox_key = f"select_{i}"
-                    checkbox_value = st.checkbox("", value=is_selected, key=checkbox_key, label_visibility="collapsed")
+                    checkbox_value = st.checkbox("Select video", value=is_selected, key=checkbox_key, label_visibility="collapsed")
                     
                     # Update selection based on checkbox state
                     if checkbox_value and video_path not in st.session_state.selected_videos:
