@@ -27,17 +27,18 @@ GPU_MEMORY_FRACTION = 0.85  # Use 85% of available VRAM
 ENABLE_MIXED_PRECISION = True  # RTX 3060 supports Tensor Cores
 ENABLE_TF32 = True  # RTX 3060 optimization
 
-# Scene detection settings
-SCENE_DETECTION_THRESHOLD = 30.0
-MIN_SCENE_LENGTH_SECONDS = 2.0
+# Scene detection settings - SPEED OPTIMIZED
+SCENE_DETECTION_THRESHOLD = 35.0  # Higher = fewer scenes = faster
+MIN_SCENE_LENGTH_SECONDS = 3.0  # Longer minimum = faster processing
 ADAPTIVE_THRESHOLD = 3.0
+FRAME_SKIP = 2  # Process every 2nd frame for 2x speed
 
-# RTX 3060 optimized Whisper settings - Conservative for stability
-WHISPER_MODEL_SIZE = os.getenv("WHISPER_MODEL", "large")  # RTX 3060 can handle large
+# RTX 3060 optimized Whisper settings - SPEED OPTIMIZED
+WHISPER_MODEL_SIZE = os.getenv("WHISPER_MODEL", "base")  # 4x faster than large, 95%+ accuracy
 WHISPER_LANGUAGE = "en"
-CHUNK_LENGTH_MS = 30000  # 30 seconds
+CHUNK_LENGTH_MS = 20000  # Reduced to 20 seconds for faster processing
 WHISPER_DEVICE = "cuda"
-WHISPER_BATCH_SIZE = 8  # Reduced from 16 for better memory stability
+WHISPER_BATCH_SIZE = 12  # Increased for speed (from 8)
 
 # LLM settings - RTX 3060 optimized - Conservative for stability
 LLM_MODEL_PATH = MODELS_DIR / "local_llm"
@@ -55,10 +56,11 @@ MIN_SUMMARY_LENGTH_MINUTES = 2
 VALIDATION_METRICS = ["f1_score", "precision", "recall"]
 BENCHMARK_DATASETS = ["tvsum", "summe"]
 
-# RTX 3060 batch processing - Conservative for reliability
-DEFAULT_BATCH_SIZE = 2  # Reduced from 3 for better memory stability
-MAX_BATCH_SIZE = 3  # Reduced from 4 for safer processing
-PROCESSING_TIMEOUT_HOURS = 4  # Faster with RTX 3060
+# RTX 3060 batch processing - SPEED OPTIMIZED
+DEFAULT_BATCH_SIZE = 1  # Single video for max speed and memory efficiency  
+MAX_BATCH_SIZE = 2  # Maximum for complex videos
+PROCESSING_TIMEOUT_HOURS = 2  # Faster expected completion
+CLEANUP_FREQUENCY = 3  # Clean up every 3 videos instead of every video
 
 # RTX 3060 Performance Optimization
 CUDA_BENCHMARK = True  # Enable cuDNN benchmark
